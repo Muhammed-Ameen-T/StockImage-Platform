@@ -1,6 +1,5 @@
 .env
 .env.production
-/dist
 /node_modules
 /logging
 /.vscode

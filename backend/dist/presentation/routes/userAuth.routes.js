@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const inversify_config_1 = require("../../core/inversify.config");
+const types_1 = require("../../core/types");
+const validate_middleware_1 = require("../middlewares/validate.middleware");
+const userAuth_validation_1 = require("../validation/userAuth.validation");
+const verifyToken_middleware_1 = require("../middlewares/verifyToken.middleware");
+const userAuthController = inversify_config_1.container.get(types_1.TYPES.UserAuthController);
+const router = (0, express_1.Router)();
+router.post('/send-otp', (req, res, next) => (0, validate_middleware_1.validateRequest)(userAuth_validation_1.SendOtpSchema)(req, res, () => userAuthController.sendOtp(req, res, next)));
+router.post('/verify-otp', (req, res, next) => (0, validate_middleware_1.validateRequest)(userAuth_validation_1.VerifyOtpSchema)(req, res, () => userAuthController.verifyOtp(req, res, next)));
+router.post('/login', (req, res, next) => (0, validate_middleware_1.validateRequest)(userAuth_validation_1.UserLoginSchema)(req, res, () => userAuthController.login(req, res, next)));
+router.post('/logout', (req, res, next) => userAuthController.logout(req, res, next));
+router.patch('/change-password', verifyToken_middleware_1.verifyAccessToken, (0, validate_middleware_1.validateRequest)(userAuth_validation_1.ChangePasswordSchema), (req, res, next) => userAuthController.changePassword(req, res, next));
+exports.default = router;
