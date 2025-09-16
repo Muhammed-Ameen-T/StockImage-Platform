@@ -11,7 +11,7 @@ FROM dependencies AS builder
 WORKDIR /app
 COPY . .
 # This command needs to match the build script in your package.json
-RUN npm run build
+RUN npm run build   
 
 # Stage 3: Production
 # This stage creates the final, minimal production image.

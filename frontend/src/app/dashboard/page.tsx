@@ -16,7 +16,7 @@ import { APIError, ImageItem } from "@/types"
 import Providers from "@/components/layout/providers"
 import Protected from "@/components/layout/protected"
 import Image from "next/image"
-import { toast } from "react-hot-toast/headless"
+import { toast } from "sonner"
 
 export default function Dashboard() {
   const [page, setPage] = useState(1)
