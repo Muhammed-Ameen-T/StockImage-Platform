@@ -5,4 +5,5 @@ export interface IImageController {
   deleteImage(req: Request, res: Response, next: NextFunction): Promise<void>;
   findUserImages(req: Request, res: Response, next: NextFunction): Promise<void>;
   editImage(req: Request, res: Response, next: NextFunction): Promise<void>;
+  reorderImage(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

@@ -3,100 +3,177 @@
 import { useState } from "react"
 import { z } from "zod"
 import { useAppDispatch } from "@/redux/store"
-import { setCredentials } from "@/redux/slices/authSlice"
-import { AuthAPI } from "@/services/api"
+import { setCredentials, logout as logoutAction } from "@/redux/slices/authSlice"
+import { AuthAPI } from "@/services/authApi"
 
+// SCHEMAS
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email({ message: "Valid email is required" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+})
+
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(6, { message: "Current password must be at least 6 characters" }),
+  newPassword: z.string().min(6, { message: "New password must be at least 6 characters" }),
 })
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  phone: z.string().min(8),
-  password: z.string().min(6),
+  name: z.string().min(2, { message: "Name is required" }),
+  email: z.string().email({ message: "Valid email is required" }),
+  phone: z.string().min(8, { message: "Phone number is required" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  otp: z.string().min(4, { message: "OTP is required" }),
 })
 
-const resetSchema = z.object({
-  email: z.string().email(),
-  token: z.string().min(6),
-  password: z.string().min(6),
-})
-
+// HOOK: LOGIN
 export function useLogin() {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<{ email?: string; password?: string } | null>(null)
   const dispatch = useAppDispatch()
 
   const submit = async (values: z.infer<typeof loginSchema>) => {
-    setError(null)
+    setServerError(null)
+    setErrors(null)
+
     const parsed = loginSchema.safeParse(values)
     if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message || "Invalid input")
-      return
+      const fieldErrors: typeof errors = {}
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof typeof fieldErrors
+        fieldErrors[field] = issue.message
+      })
+      setErrors(fieldErrors)
+      return false
     }
+
     setLoading(true)
     try {
-      const data = await AuthAPI.login(parsed.data)
-      dispatch(setCredentials(data)) // expects { token, user }
+      const data = await AuthAPI.login(parsed.data.email, parsed.data.password)
+      dispatch(setCredentials(data))
       return data
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Login failed")
+      setServerError(e?.response?.data?.message || "Login failed")
+      return false
     } finally {
       setLoading(false)
     }
   }
 
-  return { submit, loading, error }
+  return { submit, loading, serverError, errors }
 }
 
-export function useRegister() {
+// HOOK: CHANGE PASSWORD
+export function useChangePassword() {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<{ oldPassword?: string; newPassword?: string } | null>(null)
+
+  const submit = async (values: z.infer<typeof changePasswordSchema>) => {
+    setServerError(null)
+    setErrors(null)
+
+    const parsed = changePasswordSchema.safeParse(values)
+    if (!parsed.success) {
+      const fieldErrors: typeof errors = {}
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof typeof fieldErrors
+        fieldErrors[field] = issue.message
+      })
+      setErrors(fieldErrors)
+      return false
+    }
+
+    setLoading(true)
+    try {
+      await AuthAPI.changePassword(parsed.data.oldPassword, parsed.data.newPassword)
+      return true
+    } catch (e: any) {
+      setServerError(e?.response?.data?.message || "Password change failed")
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { submit, loading, serverError, errors }
+}
+
+// HOOK: SEND OTP
+export function useSendOtp() {
+  const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Partial<z.infer<typeof registerSchema>> | null>(null)
+
+  const submit = async (values: Omit<z.infer<typeof registerSchema>, "otp">) => {
+    setServerError(null)
+    setErrors(null)
+
+    const parsed = registerSchema.omit({ otp: true }).safeParse(values)
+    if (!parsed.success) {
+      const fieldErrors: typeof errors = {}
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof typeof fieldErrors
+        fieldErrors[field] = issue.message
+      })
+      setErrors(fieldErrors)
+      return false
+    }
+
+    setLoading(true)
+    try {
+      await AuthAPI.sendOtp(parsed.data.email)
+      return true
+    } catch (e: any) {
+      setServerError(e?.response?.data?.message || "OTP send failed")
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { submit, loading, serverError, errors }
+}
+
+// HOOK: VERIFY OTP
+export function useVerifyOtp() {
+  const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Partial<z.infer<typeof registerSchema>> | null>(null)
   const dispatch = useAppDispatch()
 
   const submit = async (values: z.infer<typeof registerSchema>) => {
-    setError(null)
+    setServerError(null)
+    setErrors(null)
+
     const parsed = registerSchema.safeParse(values)
     if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message || "Invalid input")
-      return
+      const fieldErrors: typeof errors = {}
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof typeof fieldErrors
+        fieldErrors[field] = issue.message
+      })
+      setErrors(fieldErrors)
+      return false
     }
+
     setLoading(true)
     try {
-      // Create and then auto-login
-      await AuthAPI.register(parsed.data)
-      const login = await AuthAPI.login({ email: parsed.data.email, password: parsed.data.password })
-      dispatch(setCredentials(login))
-      return login
+      const data = await AuthAPI.verifyOtp(
+        parsed.data.name,
+        parsed.data.email,
+        parsed.data.otp,
+        parsed.data.password
+      )
+      dispatch(setCredentials(data))
+      return data
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Register failed")
+      setServerError(e?.response?.data?.message || "OTP verification failed")
+      return false
     } finally {
       setLoading(false)
     }
   }
 
-  return { submit, loading, error }
-}
-
-export function useResetPassword() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const submit = async (values: z.infer<typeof resetSchema>) => {
-    setError(null)
-    const parsed = resetSchema.safeParse(values)
-    if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message || "Invalid input")
-      return
-    }
-    setLoading(true)
-    try {
-      return await AuthAPI.resetPassword(parsed.data)
-    } catch (e: any) {
-      setError(e?.response?.data?.message || "Reset failed")
-    } finally {
-      setLoading(false)
-    }
-  }
-  return { submit, loading, error }
+  return { submit, loading, serverError, errors }
 }

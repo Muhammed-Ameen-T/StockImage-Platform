@@ -5,7 +5,7 @@ const imageSchema = new Schema<IImage>(
     {
         userId: { type: Schema.Types.ObjectId, ref: "User" },
         title: String,
-        fileName: String,
+        originalFileName: String,
         fileSize: Number,
         mimeType: String,
         url: String,

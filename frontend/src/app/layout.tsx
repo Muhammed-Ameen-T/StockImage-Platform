@@ -7,11 +7,12 @@ import "./globals.css"
 import Providers from "@/components/layout/providers"
 import Navbar from "@/components/layout/navbar"
 import { Suspense } from "react"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "Image Manager",
+  description: "Manage and organize your images with ease.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,11 +20,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Providers>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense
+            fallback={<LoadingSpinner />}
+          >
             <Navbar />
             {children}
           </Suspense>
         </Providers>
+        <Toaster richColors position="bottom-right" />
         <Analytics />
       </body>
     </html>

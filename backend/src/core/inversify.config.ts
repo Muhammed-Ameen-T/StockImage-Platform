@@ -26,6 +26,9 @@ import { EditImageUseCase } from "../application/useCases/editImage.useCase"
 import { IEditImageUseCase } from "../domain/interfaces/useCases/editImage.interface"
 import { ChangePasswordUseCase } from "../application/useCases/changePassword.useCase"
 import { IChangePasswordUseCase } from "../domain/interfaces/useCases/changePassword.interface"
+import { IReorderImageUseCase } from "../domain/interfaces/useCases/reorderImage.interface"
+import { ReorderImageUseCase } from "../application/useCases/reorderImage.useCase"
+import { CloudinaryService } from "../infrastructure/services/cloudinary.service"
 
 const container = new Container()
 
@@ -36,6 +39,7 @@ container.bind<IImageRepository>(TYPES.ImageRepository).to(ImageRepository);
 // Services
 container.bind<JwtService>(TYPES.JwtService).to(JwtService);
 container.bind<RedisService>(TYPES.RedisService).to(RedisService);
+container.bind<CloudinaryService>(TYPES.CloudinaryService).to(CloudinaryService);
 
 // UseCases
 container.bind<ILoginUserUseCase>(TYPES.UserLoginUseCase).to(LoginUserUseCase);
@@ -46,6 +50,7 @@ container.bind<IDeleteImageUseCase>(TYPES.DeleteImageUseCase).to(DeleteImageUseC
 container.bind<IFindUserImagesUseCase>(TYPES.FindUserImagesUseCase).to(FindUserImagesUseCase);
 container.bind<IEditImageUseCase>(TYPES.EditImageUseCase).to(EditImageUseCase);
 container.bind<IChangePasswordUseCase>(TYPES.ChangePasswordUseCase).to(ChangePasswordUseCase);
+container.bind<IReorderImageUseCase>(TYPES.ReorderImageUseCase).to(ReorderImageUseCase);
 
 // Controllers
 container.bind<IUserAuthController>(TYPES.UserAuthController).to(UserAuthController);

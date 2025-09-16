@@ -6,6 +6,7 @@ export const TYPES = {
   //Services
   JwtService: Symbol.for("JwtService"),
   RedisService: Symbol.for("RedisService"),
+  CloudinaryService: Symbol.for("CloudinaryService"),
   
   //Controllers
   UserAuthController: Symbol.for("UserAuthController"),
@@ -21,4 +22,5 @@ export const TYPES = {
   FindUserImagesUseCase: Symbol.for("FindUserImagesUseCase"),
   EditImageUseCase: Symbol.for("EditImageUseCase"),
   ChangePasswordUseCase: Symbol.for("ChangePasswordUseCase"),
+  ReorderImageUseCase: Symbol.for("ReorderImageUseCase"),
 }

@@ -13,4 +13,5 @@ export const SuccessMsg = {
   IMAGES_FETCHED: 'Images fetched successfully',
   IMAGE_UPDATED: 'Image updated successfully',
   PASSWORD_CHANGED: 'Password changed successfully',
+  IMAGE_REORDERED: 'Image reordered successfully',
 };

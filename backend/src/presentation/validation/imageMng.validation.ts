@@ -13,7 +13,7 @@ export const BulkUploadSchema = z.object({
 });
 
 export const DeleteImageSchema = z.object({
-  imageId: z.string().min(1, 'Image ID is required'),
+  id: z.string().min(1, 'Image ID is required'),
 });
 
 export const FindUserImagesSchema = z.object({
@@ -28,4 +28,10 @@ export const EditImageSchema = z.object({
   title: z.string().min(1, 'Title is required').optional(),
   url: z.string().url('Invalid URL').optional(),
   order: z.number().int().min(0).optional(),
+});
+
+export const ReorderImageSchema = z.object({
+  imageId: z.string().min(1, 'Image ID is required'),
+  previousOrder: z.number().optional(),
+  nextOrder: z.number().optional(),
 });

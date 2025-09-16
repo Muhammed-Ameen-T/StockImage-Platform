@@ -1,4 +1,3 @@
-import { HydratedDocument, UpdateWriteOpResult } from 'mongoose';
 import { IImage } from '../model/image.interface';
 
 export interface IImageRepository { 
@@ -15,4 +14,6 @@ export interface IImageRepository {
     sortOrder?: 'asc' | 'desc';
   }): Promise<{ images: IImage[]; totalCount: number }>;
   updateImage(imageId: string, updates: Partial<{ title: string; url: string; order: number }>): Promise<IImage | null>;
+  findSurroundingImages( userId: string, previousOrder?: number, nextOrder?: number ): Promise<IImage[]>;
+  findMaxOrder(userId: string): Promise<number>;
 }

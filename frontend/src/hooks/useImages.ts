@@ -1,18 +1,33 @@
-"use client"
-
+// hooks/useImages.ts
+import { useEffect } from "react"
 import useSWR from "swr"
-import { ImagesAPI } from "@/services/api"
-import type { ImageItem } from "@/types"
+import { ImagesAPI } from "@/services/imageApi"
+import { ImageResponse, ListParams } from "@/types/image.types"
 
-export function useImages() {
-  const { data, error, isLoading, mutate } = useSWR<ImageItem[]>("/images", () => ImagesAPI.list())
-  return { images: data || [], error, isLoading, mutate }
-}
+export function useImages(params: ListParams = {}) {
+  const queryKey: [string, ListParams] = ["/images/user", params]
 
-export function useImage(id: string) {
-  const key = id ? `/images/${id}` : null
-  const { data, error, isLoading, mutate } = useSWR<ImageItem | null>(key, () =>
-    id ? ImagesAPI.get(id) : Promise.resolve(null),
-  )
-  return { image: data || null, error, isLoading, mutate }
+  const fetcher = async ([_, query]: [string, ListParams]): Promise<ImageResponse> => {
+    const response = await ImagesAPI.list(query)
+    return {
+      images: response.images,
+      total: response.total,
+    }
+  }
+
+  const { data, error, isLoading, mutate } = useSWR<ImageResponse, Error>(queryKey, fetcher)
+
+  useEffect(() => {
+    if (error) {
+      console.error("Failed to fetch images:", error.message)
+    }
+  }, [error])
+
+  return {
+    images: data?.images ?? [],
+    total: data?.total ?? 0,
+    error: error?.message,
+    isLoading,
+    mutate,
+  }
 }

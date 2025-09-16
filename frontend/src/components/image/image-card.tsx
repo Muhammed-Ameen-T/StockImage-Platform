@@ -1,54 +1,132 @@
+// components/image/ImageCard.tsx
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
-import { useAppDispatch, useAppSelector } from "@/redux/store"
-import { setSelectedIds } from "@/redux/slices/imagesSlice"
-import { ImagesAPI } from "@/services/api"
-import type { ImageItem } from "@/types"
+import { ImagesAPI } from "@/services/imageApi"
+import { Button } from "@/components/ui/Button"
+import { Modal } from "@/components/ui/Modal"
+import { ImageItem } from "@/types"
+import { EditImageModal } from "../ui/EditImageModal"
 
-export default function ImageCard({ item, onDeleted }: { item: ImageItem; onDeleted: () => void }) {
-  const dispatch = useAppDispatch()
-  const selectedIds = useAppSelector((s) => s.images.selectedIds)
-  const selected = selectedIds.includes(item.id)
+interface ImageCardProps {
+  item: ImageItem
+  onDeleted: () => void
+  onUpdated: () => void
+  onDragStart: (e: React.DragEvent, id: string) => void
+  onDragOver: (e: React.DragEvent, id: string) => void
+  onDrop: (e: React.DragEvent, id: string) => void
+  onDragEnter: (e: React.DragEvent, id: string) => void
+  onDragLeave: (e: React.DragEvent, id: string) => void
+  isDraggingOver: boolean
+}
 
-  const toggleSelect = () => {
-    const next = selected ? selectedIds.filter((id) => id !== item.id) : [...selectedIds, item.id]
-    dispatch(setSelectedIds(next))
-  }
+export function ImageCard({
+  item,
+  onDeleted,
+  onUpdated,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnter,
+  onDragLeave,
+  isDraggingOver,
+}: ImageCardProps) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   return (
-    <div className="group rounded border">
-      <div className="relative aspect-square w-full overflow-hidden">
+    <div
+      className={`relative group rounded-lg overflow-hidden border bg-background transition-all ${
+        isDraggingOver ? "ring-2 ring-blue-500 bg-blue-50" : ""
+      }`}
+      onDragOver={(e) => onDragOver(e, item._id)}
+      onDrop={(e) => onDrop(e, item._id)}
+      onDragEnter={(e) => onDragEnter(e, item._id)}
+      onDragLeave={(e) => onDragLeave(e, item._id)}
+    >
+      <div className="relative w-full h-48">
         <Image
           src={item.url || "/placeholder.svg?height=600&width=600&query=missing%20image"}
           alt={item.title || "image"}
           fill
           className="object-cover transition-transform group-hover:scale-105"
+          sizes="(max-width: 768px) 50vw, 33vw"
         />
-      </div>
-      <div className="flex items-center justify-between p-2">
-        <div className="flex items-center gap-2">
-          <input type="checkbox" checked={selected} onChange={toggleSelect} aria-label="Select image" />
-          <div className="text-sm">{item.title}</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link className="rounded border px-2 py-1 text-xs hover:bg-accent" href={`/edit/${item.id}`}>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+        <button
+          className="absolute top-2 left-2 cursor-grab text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          aria-label="Drag to reorder"
+          draggable
+          onDragStart={(e) => onDragStart(e, item._id)}
+        >
+          ⠿
+        </button>
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsEditModalOpen(true)}
+          >
             Edit
-          </Link>
-          <button
-            className="rounded border px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-            onClick={async () => {
-              const ok = window.confirm("Delete this image?")
-              if (!ok) return
-              await ImagesAPI.remove(item.id)
-              onDeleted()
-            }}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsDeleteModalOpen(true)}
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
+      <div className="p-3 flex items-center justify-between">
+        <h3 className="text-sm font-medium truncate">{item.title}</h3>
+        <p className="text-xs text-muted-foreground">
+          {(item.fileSize / 1024 / 1024).toFixed(2)} MB
+        </p>
+      </div>
+
+      <EditImageModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        item={item}
+        onUpdated={onUpdated}
+        setError={setError}
+      />
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Delete"
+      >
+        <div className="space-y-4">
+          <p>Are you sure you want to delete &quot;{item.title}&quot;?</p>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await ImagesAPI.remove(item._id)
+                  onDeleted()
+                  setIsDeleteModalOpen(false)
+                } catch (err) {
+                  setError("Failed to delete image")
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

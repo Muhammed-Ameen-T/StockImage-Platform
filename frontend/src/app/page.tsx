@@ -1,4 +1,11 @@
+"use client"
+import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated"
+
 export default function Page() {
+  const shouldRender = useRedirectIfAuthenticated()
+
+  if (!shouldRender) return null 
+
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-5xl flex-col items-center justify-center gap-4 px-4">
       <h1 className="text-balance text-center text-2xl font-semibold">Image Management App</h1>

@@ -1,7 +1,6 @@
 "use client"
 
 import Providers from "@/components/layout/providers"
-import Navbar from "@/components/layout/navbar"
 import Protected from "@/components/layout/protected"
 import UploadList from "@/components/image/upload-list"
 import { useRouter } from "next/navigation"

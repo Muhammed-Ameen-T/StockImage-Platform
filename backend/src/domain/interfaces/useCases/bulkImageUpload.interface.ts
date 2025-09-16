@@ -1,3 +1,5 @@
+import { BulkUploadDTO } from "../../../application/dtos/image.dto";
+
 export interface IBulkUploadImagesUseCase {
-  execute(userId: string, images: { title: string; url: string }[]): Promise<void>;
+  execute(dto: BulkUploadDTO): Promise<void>;
 }

@@ -69,7 +69,6 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
       throw new CustomError(ErrorMsg.USER_NOT_FOUND, HttpResCode.INTERNAL_SERVER_ERROR);
     }
 
-
     const accessToken = this.jwtService.generateAccessToken(createdUser._id?.toString());
     const refreshToken = this.jwtService.generateRefreshToken(createdUser._id?.toString());
 

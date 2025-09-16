@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: [env.CLIENT_ORIGIN],
+    origin: [env.CLIENT_ORIGIN,'http://localhost:3000'],
     credentials: true,
   }),
 );
@@ -22,10 +22,11 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-
-// Import and use routes
 import userAuthRoutes from './presentation/routes/userAuth.routes';
+import userImageRoutes from './presentation/routes/imageMng.routes';
+
 app.use('/api/auth', userAuthRoutes);
+app.use('/api/images', userImageRoutes);
 
 app.use(requestLogger);
 app.use(errorHandler);

@@ -8,8 +8,10 @@ import {
   DeleteImageSchema,
   EditImageSchema,
   FindUserImagesSchema,
+  ReorderImageSchema,
 } from '../validation/imageMng.validation';
 import { verifyAccessToken } from '../middlewares/verifyToken.middleware';
+import { imageUpload, singleImageEditUpload, upload } from '../middlewares/multerUpload.middleware';
 
 const imageController = container.get<IImageController>(TYPES.ImageMngController);
 
@@ -17,28 +19,38 @@ const router = Router();
 
 router.post(
   '/bulk-upload',
-  validateRequest(BulkUploadSchema),
+  verifyAccessToken,
+  imageUpload,
+  // validateRequest(BulkUploadSchema),
   (req, res, next) => imageController.bulkUpload(req, res, next)
 );
 
 router.delete(
-  '/delete/:imageId',
-  validateRequest(DeleteImageSchema),
+  '/delete/:id',
+  verifyAccessToken,
+  // validateRequest(DeleteImageSchema),
   (req, res, next) => imageController.deleteImage(req, res, next)
 );
 
 router.get(
   '/user',
   verifyAccessToken,
-  validateRequest(FindUserImagesSchema),
   (req, res, next) => imageController.findUserImages(req, res, next)
 );
   
-router.get(
-  '/edit/:imageId',
+router.patch(
+  '/edit/:id',
   verifyAccessToken,
-  validateRequest(EditImageSchema),
+  upload.single("file"),
+  // validateRequest(EditImageSchema),
   (req, res, next) => imageController.editImage(req, res, next)
+);
+
+router.patch(
+  '/reorder',
+  verifyAccessToken,
+  validateRequest(ReorderImageSchema),
+  (req, res, next) => imageController.reorderImage(req, res, next)
 );
 
 export default router;

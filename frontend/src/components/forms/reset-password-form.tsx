@@ -1,90 +1,126 @@
 "use client"
 
-import { useSearchParams, useRouter } from "next/navigation"
-import { useResetPassword } from "@/hooks/userAuth"
-import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useChangePassword } from "@/hooks/userAuth"
+import { useState, FormEvent } from "react"
+import FormInput from "@/components/ui/form-input"
+import FormButton from "@/components/ui/form-button"
+import { LockIcon, ShieldIcon } from "@/components/ui/form-icons"
+import { toast } from "sonner"
+
+interface ChangePasswordErrors {
+  oldPassword?: string
+  newPassword?: string
+  [key: string]: string | undefined
+}
 
 export default function ResetPasswordForm() {
-  const params = useSearchParams()
   const router = useRouter()
-  const presetToken = params.get("token") || ""
-  const presetEmail = params.get("email") || ""
-  const { submit, loading, error } = useResetPassword()
-  const [email, setEmail] = useState(presetEmail)
-  const [token, setToken] = useState(presetToken)
-  const [password, setPassword] = useState("")
+  const { submit, loading, errors, serverError } = useChangePassword()
+  
+  const [oldPassword, setOldPassword] = useState<string>("")
+  const [newPassword, setNewPassword] = useState<string>("")
+  const [showOldPassword, setShowOldPassword] = useState<boolean>(false)
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false)
 
-  useEffect(() => {
-    if (presetToken) setToken(presetToken)
-    if (presetEmail) setEmail(presetEmail)
-  }, [presetToken, presetEmail])
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const result = await submit({ oldPassword, newPassword })
+    if (result) {
+      router.push("/dashboard")
+      toast.success("Password updated successfully!")
+    }
+  }
+
+  const typedErrors = errors as ChangePasswordErrors | undefined
 
   return (
-    <form
-      className="space-y-6"
-      onSubmit={async (e) => {
-        e.preventDefault()
-        const res = await submit({ email, token, password })
-        if (res) router.push("/login")
-      }}
-    >
-      <div>
-        <label className="form-label">Email</label>
-        <input
-          type="email"
-          className="form-input"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-        />
+    <form className="space-y-6" onSubmit={handleSubmit}>
+      {/* Current Password Field */}
+      <FormInput
+        label="Current Password"
+        type="password"
+        icon={<LockIcon />}
+        value={oldPassword}
+        onChange={(e) => setOldPassword(e.target.value)}
+        placeholder="Enter your current password"
+        error={typedErrors?.oldPassword}
+        showPasswordToggle
+        showPassword={showOldPassword}
+        onTogglePassword={() => setShowOldPassword(!showOldPassword)}
+        disabled={loading}
+        required
+      />
+
+      {/* New Password Field */}
+      <FormInput
+        label="New Password"
+        type="password"
+        icon={<ShieldIcon />}
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        placeholder="Create a strong new password"
+        error={typedErrors?.newPassword}
+        showPasswordToggle
+        showPassword={showNewPassword}
+        onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+        disabled={loading}
+        required
+      />
+
+      {/* Password Requirements */}
+      <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+        <div className="flex items-start gap-2">
+          <ShieldIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-medium text-blue-900 mb-2">Password Requirements</h4>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
+                At least 8 characters long
+              </li>
+              <li className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
+                Include uppercase and lowercase letters
+              </li>
+              <li className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
+                Include at least one number
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="form-label">Reset Token</label>
-        <input
-          type="text"
-          className="form-input"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Paste your reset token here"
-          required
-        />
-        <p className="mt-2 text-xs text-slate-500">
-          Check your email for the reset token
-        </p>
-      </div>
-      <div>
-        <label className="form-label">New Password</label>
-        <input
-          type="password"
-          className="form-input"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          required
-        />
-      </div>
-      {error && (
-        <div className="rounded-lg bg-red-50 p-4 border border-red-200">
-          <p className="text-sm text-red-800" role="alert">
-            {error}
-          </p>
+
+      {/* Server Error */}
+      {serverError && (
+        <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+          <div className="flex items-center gap-2">
+            {/* <ErrorIcon className="flex-shrink-0" /> */}
+            <p className="text-sm text-red-800" role="alert">
+              {serverError}
+            </p>
+          </div>
         </div>
       )}
-      <button
+
+      {/* Submit Button */}
+      <FormButton
         type="submit"
-        disabled={loading}
-        className="w-full btn-primary"
+        loading={loading}
+        loadingText="Updating password..."
+        disabled={!oldPassword || !newPassword}
+        icon={<ShieldIcon className="w-4 h-4" />}
       >
-        {loading ? (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Resetting password...</span>
-          </div>
-        ) : (
-          "Reset password"
-        )}
-      </button>
+        Update Password
+      </FormButton>
+
+      {/* Security Note */}
+      <div className="text-center">
+        <p className="text-xs text-gray-500">
+          After updating your password, you&lsquo;ll be redirected to the login page
+        </p>
+      </div>
     </form>
   )
 }

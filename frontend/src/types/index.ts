@@ -5,8 +5,14 @@ export type AuthUser = {
 }
 
 export type ImageItem = {
-  id: string
+  _id: string
   title: string
   url: string
-  createdAt?: string
+  originalFileName: string
+  mimeType: string  
+  fileSize: number
+  order: number
+  userId: string
+  createdAt: string
+  updatedAt?: string
 }

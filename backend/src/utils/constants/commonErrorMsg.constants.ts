@@ -23,4 +23,6 @@ export const ErrorMsg = {
   FAILED_STORING_OTP: 'Failed to store OTP in Redis.',
   USER_ALREADY_EXISTS: 'User already exists.',
   FAILED_SENDING_OTP: 'Failed to send OTP email.',
+  INVALID_FILE_ARRAY: 'Mismatch between files and metadata arrays.',
+  UPLOAD_FAILED: 'One or more files failed to upload.',
 };

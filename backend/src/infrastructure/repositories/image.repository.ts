@@ -3,7 +3,7 @@ import { BaseRepository } from './base.repository';
 import { IImage } from '../../domain/interfaces/model/image.interface';
 import { IImageRepository } from '../../domain/interfaces/repositories/image.repository';
 import { ImageModel } from '../database/image.modal';
-import { FilterQuery, SortOrder } from 'mongoose';
+import { FilterQuery, SortOrder, Types } from 'mongoose';
 
 /**
  * Repository for image-specific operations.
@@ -82,9 +82,9 @@ export class ImageRepository implements IImageRepository {
     const {
       userId,
       page = 1,
-      limit = 10,
+      limit = 8,
       search,
-      sortBy = 'createdAt',
+      sortBy = 'order',
       sortOrder = 'desc',
     } = params;
 
@@ -116,5 +116,48 @@ export class ImageRepository implements IImageRepository {
   ): Promise<IImage | null> {
     const updated = await ImageModel.findByIdAndUpdate(imageId, updates, { new: true }).lean<IImage | null>();
     return updated;
+  }
+
+  /**
+   * Finds surrounding images for localized reordering.
+   * @param userId - ID of the user
+   * @param previousOrder - Order of the image before the target (optional)
+   * @param nextOrder - Order of the image after the target (optional)
+   * @returns Array of images sorted by order
+   */
+  async findSurroundingImages(
+    userId: string,
+    previousOrder?: number,
+    nextOrder?: number
+  ): Promise<IImage[]> {
+    const filter: FilterQuery<IImage> = { userId };
+
+    if (previousOrder !== undefined && nextOrder !== undefined) {
+      filter.order = { $gte: previousOrder, $lte: nextOrder };
+    } else if (previousOrder === undefined && nextOrder !== undefined) {
+      filter.order = { $lte: nextOrder };
+    } else if (previousOrder !== undefined && nextOrder === undefined) {
+      filter.order = { $gte: previousOrder };
+    }
+
+    return await ImageModel.find(filter)
+      .sort({ order: 1 })
+      .limit(10)
+      .lean<IImage[]>();
+  }
+
+  /**
+   * Finds the highest order value for a user's images.
+   * @param userId - ID of the user
+   * @returns Max order number or 0 if no images exist
+   */
+  async findMaxOrder(userId: string): Promise<number> {
+    const result = await ImageModel
+      .findOne({ userId })
+      .sort({ order: -1 })
+      .select("order")
+      .lean<{ order: number } | null>()
+
+    return result?.order || 0;
   }
 }

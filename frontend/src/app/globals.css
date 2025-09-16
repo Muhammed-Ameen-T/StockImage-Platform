@@ -12,12 +12,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* For a white-first theme, the dark mode preference is commented out to prevent automatic theme switching. */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
@@ -25,7 +26,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Enhanced form focus styles */
+/*
+ * ---
+ * Updated styles for a white-first theme.
+ * The primary button is now a light-colored button, and the secondary button is dark.
+ * ---
+ */
+
+/* Form styles remain mostly the same as they are suitable for a light theme. */
 .form-input {
   @apply w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20;
 }
@@ -34,22 +42,27 @@ body {
   @apply mb-2 block text-sm font-medium text-slate-700;
 }
 
+/* Primary Button: Now a light button with dark text. */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
+/* Secondary Button: Now a dark button with light text. */
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2;
+  @apply inline-flex items-center justify-center rounded-lg border border-slate-900 bg-slate-900 px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-800 focus:ring-offset-2;
 }
 
+/* Navigation links have been updated for the new theme. */
 .nav-link {
-  @apply rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-slate-100;
+  @apply rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200;
 }
 
+/* Active Nav Link: Light background, dark text. */
 .nav-link-active {
-  @apply bg-blue-50 text-blue-700;
+  @apply bg-slate-100 text-slate-900;
 }
 
+/* Inactive Nav Link: Dark text with a light hover effect. */
 .nav-link-inactive {
-  @apply text-slate-600 hover:text-slate-900;
+  @apply text-slate-600 hover:text-slate-900 hover:bg-slate-100;
 }
