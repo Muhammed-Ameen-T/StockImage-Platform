@@ -1,30 +1,29 @@
-# Stage 1: Base
-FROM node:22-alpine AS base
+# Stage 1: Dependency Installation
+# This stage installs all development and production dependencies.
+FROM node:22-alpine AS dependencies
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline --no-audit
 
-# Copy package.json files from the backend subdirectory
-COPY backend/package*.json ./
-ARG NODE_ENV=development
-ENV NODE_ENV=$NODE_ENV
-RUN npm install
-COPY backend .
-
-# Stage 2: Development
-FROM base AS development
-ENV NODE_ENV=development
-EXPOSE 3000
-CMD ["npm", "run", "dev"]
-
-# Stage 3: Builder
-FROM base AS builder
+# Stage 2: Builder
+# This stage compiles the source code.
+FROM dependencies AS builder
+WORKDIR /app
+COPY . .
+# This command needs to match the build script in your package.json
 RUN npm run build
 
-# Stage 4: Production
+# Stage 3: Production
+# This stage creates the final, minimal production image.
 FROM node:22-alpine AS production
 WORKDIR /app
-COPY --from=builder /app/dist /app/dist
-COPY --from=base /app/node_modules /app/node_modules
-COPY --from=base /app/package.json /app/package.json
+# Copy only production dependencies from the first stage.
+COPY --from=dependencies /app/node_modules ./node_modules
+# Copy the compiled application from the builder stage.
+COPY --from=builder /app/dist ./dist
+# Copy the package.json to run the application.
+COPY --from=builder /app/package.json .
+
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
