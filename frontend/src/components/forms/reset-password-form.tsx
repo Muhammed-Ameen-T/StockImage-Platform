@@ -73,19 +73,11 @@ export default function ResetPasswordForm() {
         <div className="flex items-start gap-2">
           <ShieldIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-medium text-blue-900 mb-2">Password Requirements</h4>
+            <h5 className="text-sm font-medium text-blue-900 mb-2">Password Requirements</h5>
             <ul className="text-xs text-blue-700 space-y-1">
               <li className="flex items-center gap-1">
                 <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
-                At least 8 characters long
-              </li>
-              <li className="flex items-center gap-1">
-                <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
-                Include uppercase and lowercase letters
-              </li>
-              <li className="flex items-center gap-1">
-                <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
-                Include at least one number
+                At least 6 characters long
               </li>
             </ul>
           </div>

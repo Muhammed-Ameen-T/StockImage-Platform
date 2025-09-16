@@ -3,6 +3,7 @@ import { ERROR_MESSAGES } from "@/constants/auth.messages"
 import { ImageItem } from "@/types"
 import { ImageResponse, ListParams } from "@/types/image.types"
 import { handleAxiosError } from "@/utils/exios-error-handler"
+import { toast } from "sonner"
 
 export const ImagesAPI = {
   /**
@@ -124,6 +125,7 @@ export const ImagesAPI = {
       if (!response.data?.success) {
         throw new Error(response.data?.message || "Image deletion failed")
       }
+      toast.success("Image deleted successfully")
     } catch (error) {
       handleAxiosError(error, ERROR_MESSAGES.FAILED_DELETE_IMAGE)
     }

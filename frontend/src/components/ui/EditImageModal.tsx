@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal"
 import { Input } from "@/components/ui/Input"
 import { ImageItem } from "@/types"
 import { Upload } from "lucide-react"
+import { toast } from "sonner"
 
 interface EditImageModalProps {
   isOpen: boolean
@@ -128,8 +129,10 @@ export function EditImageModal({
       await ImagesAPI.update(item._id, payload)
       onUpdated()
       handleClose()
+      toast.success("Image updated successfully")
     } catch (err) {
       setError("Failed to update image. Please try again.")
+      toast.error("Failed to update image. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -169,7 +172,7 @@ export function EditImageModal({
         {/* Title Input */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">
-            Title *
+            Title<span className="ml-1 text-red-500 text-xl">*</span>   
           </label>
           <Input
             type="text"

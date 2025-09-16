@@ -12,10 +12,11 @@ import { Pagination } from "@/components/ui/Pagination"
 import { Modal } from "@/components/ui/Modal"
 import { EditImageModal } from "@/components/ui/EditImageModal"
 import { ViewImageModal } from "@/components/ui/ViewImageModal"
-import { ImageItem } from "@/types"
+import { APIError, ImageItem } from "@/types"
 import Providers from "@/components/layout/providers"
 import Protected from "@/components/layout/protected"
 import Image from "next/image"
+import { toast } from "react-hot-toast/headless"
 
 export default function Dashboard() {
   const [page, setPage] = useState(1)
@@ -77,6 +78,7 @@ export default function Dashboard() {
       await mutate()
       setIsDeleteModalOpen(false)
       setSelectedImage(null)
+      toast.success("Image deleted successfully")
     } catch (err) {
       setError("Failed to delete image. Please try again.")
     } finally {

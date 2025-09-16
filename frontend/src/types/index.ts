@@ -16,3 +16,12 @@ export type ImageItem = {
   createdAt: string
   updatedAt?: string
 }
+
+export interface APIError {
+  response?: {
+    data?: {
+      message?: string
+    }
+  }
+  message?: string
+}

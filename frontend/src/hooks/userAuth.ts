@@ -5,6 +5,8 @@ import { z } from "zod"
 import { useAppDispatch } from "@/redux/store"
 import { setCredentials, logout as logoutAction } from "@/redux/slices/authSlice"
 import { AuthAPI } from "@/services/authApi"
+import { toast } from "sonner"
+import { APIError } from "@/types"
 
 // SCHEMAS
 const loginSchema = z.object({
@@ -52,8 +54,9 @@ export function useLogin() {
       const data = await AuthAPI.login(parsed.data.email, parsed.data.password)
       dispatch(setCredentials(data))
       return data
-    } catch (e: any) {
-      setServerError(e?.response?.data?.message || "Login failed")
+    } catch (e: unknown) {
+      setServerError((e as APIError)?.response?.data?.message || (e as Error)?.message || "Login failed")
+      toast.error((e as APIError)?.response?.data?.message || (e as Error)?.message || "Login failed")
       return false
     } finally {
       setLoading(false)
@@ -88,8 +91,10 @@ export function useChangePassword() {
     try {
       await AuthAPI.changePassword(parsed.data.oldPassword, parsed.data.newPassword)
       return true
-    } catch (e: any) {
-      setServerError(e?.response?.data?.message || "Password change failed")
+    } catch (e: unknown) {
+      const errorMessage = (e as APIError)?.response?.data?.message || (e as Error)?.message || "Password change failed"
+      setServerError(errorMessage)
+      toast.error(errorMessage)
       return false
     } finally {
       setLoading(false)
@@ -124,8 +129,9 @@ export function useSendOtp() {
     try {
       await AuthAPI.sendOtp(parsed.data.email)
       return true
-    } catch (e: any) {
-      setServerError(e?.response?.data?.message || "OTP send failed")
+    } catch (e: unknown) {
+      setServerError((e as APIError)?.response?.data?.message || (e as Error)?.message || "OTP send failed")
+      toast.error((e as APIError)?.response?.data?.message || (e as Error)?.message || "OTP send failed")
       return false
     } finally {
       setLoading(false)
@@ -162,13 +168,15 @@ export function useVerifyOtp() {
       const data = await AuthAPI.verifyOtp(
         parsed.data.name,
         parsed.data.email,
+        parsed.data.phone,
         parsed.data.otp,
         parsed.data.password
       )
       dispatch(setCredentials(data))
       return data
-    } catch (e: any) {
-      setServerError(e?.response?.data?.message || "OTP verification failed")
+    } catch (e: unknown) {
+      setServerError((e as APIError)?.response?.data?.message || (e as Error)?.message || "OTP verification failed")
+      toast.error((e as APIError)?.response?.data?.message || (e as Error)?.message || "OTP verification failed")
       return false
     } finally {
       setLoading(false)

@@ -1,6 +1,6 @@
 // components/ui/form-input.tsx
 import { ReactNode, InputHTMLAttributes } from "react"
-import { WarningIcon, EyeOffIcon, EyeIcon } from "./form-icons"
+import { EyeOffIcon, EyeIcon } from "./form-icons"
 
 interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -66,7 +66,6 @@ export default function FormInput({
       </div>
       {hasError && (
         <div className="flex items-center gap-1.5 mt-2">
-          <WarningIcon className="flex-shrink-0" />
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}

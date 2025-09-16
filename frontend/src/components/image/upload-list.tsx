@@ -1,9 +1,10 @@
 "use client"
 
-import { ImagesAPI } from "@/services/imageApi"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Upload } from "lucide-react"
 import Image from "next/image"
+import { ImagesAPI } from "@/services/imageApi"
+import { Input } from "@/components/ui/Input"
 
 type FileEntry = {
   file: File
@@ -13,31 +14,48 @@ type FileEntry = {
   preview: string
   id: string
 }
+
 type ValidationError = {
-  type: 'size' | 'format'
+  type: "size" | "format" | "title" | "upload"
   message: string
 }
-export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
+
+type Props = {
+  onUploaded: () => void
+}
+
+export default function UploadList({ onUploaded }: Props) {
   const [files, setFiles] = useState<FileEntry[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: ValidationError }>({})
+  const fileInputRef = useRef<HTMLInputElement>(null) // Add ref for file input
 
   const validateFile = (file: File): ValidationError | null => {
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
       return {
-        type: 'format',
-        message: 'Only JPEG and PNG files are allowed'
+        type: "format",
+        message: "Only JPEG and PNG files are allowed",
       }
     }
 
     if (file.size > 5 * 1024 * 1024) {
       return {
-        type: 'size',
-        message: 'File size must be less than 5MB'
+        type: "size",
+        message: "File size must be less than 5MB",
       }
     }
 
+    return null
+  }
+
+  const validateTitle = (title: string): ValidationError | null => {
+    if (!title.trim()) {
+      return {
+        type: "title",
+        message: "Title is required",
+      }
+    }
     return null
   }
 
@@ -49,44 +67,48 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
       originalFileName: file.name,
       mimeType: file.type,
       preview: URL.createObjectURL(file),
-      id
+      id,
     }
   }
 
-  const MAX_FILES = 10;
-  
+  const MAX_FILES = 10
+
   const onChangeFiles = (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
+    if (!fileList || fileList.length === 0) return
 
-    const newFiles: FileEntry[] = [];
-    const newErrors: { [key: string]: ValidationError } = {};
+    const newFiles: FileEntry[] = []
+    const newErrors: { [key: string]: ValidationError } = {}
 
-    const currentFileCount = files.length;
-    const filesToAdd = Array.from(fileList);
+    const currentFileCount = files.length
+    const filesToAdd = Array.from(fileList)
 
     filesToAdd.forEach((file) => {
       if (currentFileCount + newFiles.length >= MAX_FILES) {
-        const tempId = Math.random().toString(36).substr(2, 9);
+        const tempId = Math.random().toString(36).substr(2, 9)
         newErrors[tempId] = {
-          type: 'size', 
+          type: "size",
           message: `Maximum of ${MAX_FILES} images can be uploaded at once.`,
-        };
-        return; 
+        }
+        return
       }
 
-      const error = validateFile(file);
-      const fileEntry = createFileEntry(file);
-      
+      const error = validateFile(file)
+      const fileEntry = createFileEntry(file)
+
       if (error) {
-        newErrors[fileEntry.id] = error;
+        newErrors[fileEntry.id] = error
       } else {
-        newFiles.push(fileEntry);
+        newFiles.push(fileEntry)
+        const titleError = validateTitle(fileEntry.title)
+        if (titleError) {
+          newErrors[fileEntry.id] = titleError
+        }
       }
-    });
+    })
 
-    setFiles(prev => [...prev, ...newFiles]);
-    setErrors(prev => ({ ...prev, ...newErrors }));
-  };
+    setFiles((prev) => [...prev, ...newFiles])
+    setErrors((prev) => ({ ...prev, ...newErrors }))
+  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -102,23 +124,33 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       onChangeFiles(e.dataTransfer.files)
     }
   }
 
   const updateTitle = (id: string, title: string) => {
-    setFiles(prev => prev.map(f => f.id === id ? { ...f, title } : f))
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, title } : f)))
+    setErrors((prev) => {
+      const newErrors = { ...prev }
+      const titleError = validateTitle(title)
+      if (titleError) {
+        newErrors[id] = titleError
+      } else {
+        delete newErrors[id]
+      }
+      return newErrors
+    })
   }
 
   const removeFile = (id: string) => {
-    const fileToRemove = files.find(f => f.id === id)
+    const fileToRemove = files.find((f) => f.id === id)
     if (fileToRemove) {
       URL.revokeObjectURL(fileToRemove.preview)
     }
-    setFiles(prev => prev.filter(f => f.id !== id))
-    setErrors(prev => {
+    setFiles((prev) => prev.filter((f) => f.id !== id))
+    setErrors((prev) => {
       const newErrors = { ...prev }
       delete newErrors[id]
       return newErrors
@@ -126,47 +158,71 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
   }
 
   const clearAll = () => {
-    files.forEach(f => URL.revokeObjectURL(f.preview))
+    files.forEach((f) => URL.revokeObjectURL(f.preview))
     setFiles([])
     setErrors({})
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "" // Reset file input
+    }
   }
 
   const upload = async () => {
     if (files.length === 0) return
+    const titleErrors: { [key: string]: ValidationError } = {}
+    files.forEach((fileEntry) => {
+      if (!errors[fileEntry.id]) {
+        const titleError = validateTitle(fileEntry.title)
+        if (titleError) {
+          titleErrors[fileEntry.id] = titleError
+        }
+      }
+    })
+
+    if (Object.keys(titleErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...titleErrors }))
+      return
+    }
 
     setUploading(true)
     try {
       const uploadData = {
-        files: files.map(f => f.file),
-        titles: files.map(f => f.title),
-        originalFileNames: files.map(f => f.originalFileName),
-        mimeTypes: files.map(f => f.mimeType),
-        fileSizes: files.map(f => f.file.size)
+        files: files.filter((f) => !errors[f.id]).map((f) => f.file),
+        titles: files.filter((f) => !errors[f.id]).map((f) => f.title),
+        originalFileNames: files.filter((f) => !errors[f.id]).map((f) => f.originalFileName),
+        mimeTypes: files.filter((f) => !errors[f.id]).map((f) => f.mimeType),
+        fileSizes: files.filter((f) => !errors[f.id]).map((f) => f.file.size),
       }
 
       await ImagesAPI.bulkUpload(uploadData)
-      
-      files.forEach(f => URL.revokeObjectURL(f.preview))
+
+      files.forEach((f) => URL.revokeObjectURL(f.preview))
       setFiles([])
       setErrors({})
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "" // Reset file input after upload
+      }
       onUploaded()
     } catch (error) {
-      console.error('Upload failed:', error)
+      console.error("Upload failed:", error)
+      setErrors((prev) => ({
+        ...prev,
+        general: { type: "upload", message: "Failed to upload images" },
+      }))
     } finally {
       setUploading(false)
     }
   }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
+    if (bytes === 0) return "0 Bytes"
     const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const sizes = ["Bytes", "KB", "MB", "GB"]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
   const hasErrors = Object.keys(errors).length > 0
-  const validFiles = files.filter(f => !errors[f.id])
+  const validFiles = files.filter((f) => !errors[f.id])
 
   return (
     <div className="w-full space-y-6">
@@ -176,8 +232,8 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
         <div
           className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
             dragActive
-              ? 'border-blue-500 bg-blue-50 scale-105'
-              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              ? "border-blue-500 bg-blue-50 scale-105"
+              : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -190,6 +246,7 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
             accept="image/jpeg,image/png"
             onChange={(e) => onChangeFiles(e.target.files)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            ref={fileInputRef} // Attach ref to file input
           />
           <div className="space-y-4">
             <div className="mx-auto w-16 h-16 text-gray-400 flex items-center justify-center">
@@ -207,30 +264,14 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
         </div>
       </div>
 
-      {/* Error Messages */}
-      {hasErrors && (
+      {/* General Error Message */}
+      {hasErrors && errors.general && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
             <div className="w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">!</div>
-            Upload Errors
+            Upload Error
           </div>
-          <div className="space-y-1 text-sm text-red-700">
-            {Object.entries(errors).map(([id, error]) => (
-              <div key={id} className="flex items-center justify-between">
-                <span>{error.message}</span>
-                <button
-                  onClick={() => {
-                    const newErrors = { ...errors }
-                    delete newErrors[id]
-                    setErrors(newErrors)
-                  }}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
+          <div className="text-sm text-red-700">{errors.general.message}</div>
         </div>
       )}
 
@@ -249,21 +290,21 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
               Clear All
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {files.map((fileEntry) => {
               const hasError = errors[fileEntry.id]
-              
+
               return (
                 <div
                   key={fileEntry.id}
                   className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-                    hasError ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    hasError ? "border-red-300 bg-red-50" : "border-gray-200"
                   }`}
                 >
                   {/* Image Preview */}
                   <div className="aspect-video bg-gray-100 relative">
-                    {!hasError ? (
+                    {!hasError || hasError.type === "title" ? (
                       <Image
                         src={fileEntry.preview}
                         alt={fileEntry.title}
@@ -293,26 +334,29 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
                         {fileEntry.originalFileName}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {formatFileSize(fileEntry.file.size)} • {fileEntry.mimeType.split('/')[1].toUpperCase()}
+                        {formatFileSize(fileEntry.file.size)} • {fileEntry.mimeType.split("/")[1].toUpperCase()}
                       </p>
                     </div>
 
-                    {!hasError && (
+                    {(!hasError || hasError.type === "title") && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Title
+                          Title <span className="text-red-500">*</span>
                         </label>
-                        <input
+                        <Input
                           type="text"
                           value={fileEntry.title}
                           onChange={(e) => updateTitle(fileEntry.id, e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                          className={`w-full ${hasError && hasError.type === "title" ? "border-red-500" : ""}`}
                           placeholder="Enter image title"
                         />
+                        {hasError && hasError.type === "title" && (
+                          <p className="text-xs text-red-600 mt-1">{hasError.message}</p>
+                        )}
                       </div>
                     )}
 
-                    {hasError && (
+                    {hasError && hasError.type !== "title" && (
                       <div className="text-xs text-red-600 bg-red-100 p-2 rounded-lg">
                         {hasError.message}
                       </div>
@@ -326,11 +370,11 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
       )}
 
       {/* Action Buttons */}
-      {validFiles.length > 0 && (
+      {files.length > 0 && (
         <div className="flex gap-3 pt-6 border-t border-gray-200">
           <button
             onClick={upload}
-            disabled={uploading || validFiles.length === 0}
+            disabled={uploading || validFiles.length === 0 || validFiles.some((f) => !f.title.trim())}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:hover:scale-100"
           >
             {uploading ? (
@@ -341,11 +385,11 @@ export default function UploadList({ onUploaded }: { onUploaded: () => void }) {
             ) : (
               <>
                 <Upload size={16} />
-                Upload {validFiles.length} Image{validFiles.length > 1 ? 's' : ''} (max {MAX_FILES})
+                Upload {validFiles.length} Image{validFiles.length > 1 ? "s" : ""} (max {MAX_FILES})
               </>
             )}
           </button>
-          
+
           <button
             onClick={clearAll}
             disabled={uploading}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
 import { ImageItem } from "@/types"
 import { EditImageModal } from "../ui/EditImageModal"
+import { toast } from "sonner"
 
 interface ImageCardProps {
   item: ImageItem
@@ -117,6 +118,7 @@ export function ImageCard({
                   await ImagesAPI.remove(item._id)
                   onDeleted()
                   setIsDeleteModalOpen(false)
+                  toast.success("Image deleted successfully")
                 } catch (err) {
                   setError("Failed to delete image")
                 }

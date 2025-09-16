@@ -155,15 +155,10 @@ export class ImageController implements IImageController {
       }
 
       const file = req.file 
-      console.log("🚀 ~ ImageController ~ editImage ~ file:", file)
       const title = req.body.title
-
       const originalFileName = req.body.originalFileName
-      console.log("🚀 ~ ImageController ~ editImage ~ originalFileName:", originalFileName)
       const mimeType = req.body.mimeType
-      console.log("🚀 ~ ImageController ~ editImage ~ mimeType:", mimeType)
       const fileSize = req.body.fileSize ? Number(req.body.fileSize) : undefined
-      console.log("🚀 ~ ImageController ~ editImage ~ fileSize:", fileSize)
 
       await this.editImageUseCase.execute(id, {
         title,

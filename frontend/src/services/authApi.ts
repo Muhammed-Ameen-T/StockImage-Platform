@@ -25,6 +25,7 @@ export const AuthAPI = {
   verifyOtp: async (
     name: string,
     email: string,
+    phoneNumber: string,
     otp: string,
     password: string
   ): Promise<AuthResponse> => {
@@ -32,6 +33,7 @@ export const AuthAPI = {
       const response = await api.post(USER_AUTH_ENDPOINTS.verifyOtp, {
         name,
         email,
+        phoneNumber,
         otp,
         password,
       })
