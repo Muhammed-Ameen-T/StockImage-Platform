@@ -71,7 +71,7 @@ export class UserAuthController implements IUserAuthController {
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
         maxAge: parseInt(env.MAX_AGE , 10),
       });
       sendResponse(res, HttpResCode.OK, SuccessMsg.USER_REGISTERED, {
@@ -101,7 +101,7 @@ export class UserAuthController implements IUserAuthController {
       res.cookie('refreshToken', response.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
         maxAge: parseInt(process.env.MAX_AGE || '0', 10),
       });
 
