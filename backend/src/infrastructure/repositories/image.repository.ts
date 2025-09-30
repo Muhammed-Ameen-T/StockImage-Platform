@@ -72,36 +72,34 @@ export class ImageRepository implements IImageRepository {
    * @returns {Promise<{ images: IImage[]; totalCount: number }>} Paginated and filtered image list.
    */
   async findUserImages(params: {
-    userId: string;
-    page?: number;
-    limit?: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }): Promise<{ images: IImage[]; totalCount: number }> {
+    userId: string
+    skip?: number
+    limit?: number
+    search?: string
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }): Promise<{ images: IImage[]; total: number }> {
     const {
       userId,
-      page = 1,
+      skip = 0,
       limit = 8,
       search,
-      sortBy = 'order',
-      sortOrder = 'desc',
-    } = params;
+      sortBy = "order",
+      sortOrder = "desc",
+    } = params
 
-    const filter: FilterQuery<IImage> = { userId };
+    const filter: FilterQuery<IImage> = { userId }
     if (search) {
-      filter.title = { $regex: search, $options: 'i' };
+      filter.title = { $regex: search, $options: "i" }
     }
 
-    const skip = (page - 1) * limit;
-    const sort: Record<string, SortOrder> = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+    const sort: Record<string, SortOrder> = { [sortBy]: sortOrder === "asc" ? 1 : -1 }
 
-    const [images, totalCount] = await Promise.all([
+    const [images, total] = await Promise.all([
       ImageModel.find(filter).sort(sort).skip(skip).limit(limit).lean<IImage[]>(),
       ImageModel.countDocuments(filter),
-    ]);
-
-    return { images, totalCount };
+    ])
+    return { images, total }
   }
 
   /**
@@ -159,5 +157,51 @@ export class ImageRepository implements IImageRepository {
       .lean<{ order: number } | null>()
 
     return result?.order || 0;
+  }
+  /**
+   * Finds the lowest order value for a user's images.
+   * @param userId - ID of the user
+   * @returns Min order number or 0 if no images exist
+   */
+  async findMinOrder(userId: string): Promise<number> {
+    const result = await ImageModel
+      .findOne({ userId })
+      .sort({ order: 1 })
+      .select("order")
+      .lean<{ order: number } | null>()
+
+    return result?.order || 0;
+  }
+
+  /**
+ * Finds the nearest order value in the specified direction from the target.
+ * @param userId - ID of the user
+ * @param targetOrder - The reference order value
+ * @param direction - 'next' for higher, 'prev' for lower
+ * @returns Nearest order value or null if none exists
+ */
+  async findNearestOrderByDirection(
+    userId: string,
+    targetOrder: number,
+    direction: 'next' | 'prev'
+  ): Promise<number | null> {
+    const query = {
+      userId,
+      order: direction === 'next'
+        ? { $gt: targetOrder }
+        : { $lt: targetOrder }
+    }
+
+    const sort: Record<string, SortOrder> = {
+      order: direction === 'next' ? 1 : -1
+    } 
+
+    const result = await ImageModel
+      .findOne(query)
+      .sort(sort)
+      .select('order')
+      .lean<IImage | null>()
+
+    return result?.order ?? null
   }
 }

@@ -25,4 +25,6 @@ export const ErrorMsg = {
   FAILED_SENDING_OTP: 'Failed to send OTP email.',
   INVALID_FILE_ARRAY: 'Mismatch between files and metadata arrays.',
   UPLOAD_FAILED: 'One or more files failed to upload.',
+  INVALID_ERROR_CONTEXT: 'Invalid reorder context.',
+  IMAGE_NOT_FOUND: 'Image not found.'
 };

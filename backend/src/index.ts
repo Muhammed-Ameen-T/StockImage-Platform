@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: [env.CLIENT_ORIGIN,'http://localhost:3000'],
+    origin: [env.CLIENT_ORIGIN, 'http://localhost:3000', 'https://stock-image-platform-9u9bbw5ns-muhammed-ameen-ts-projects.vercel.app'],
     credentials: true,
   }),
 );

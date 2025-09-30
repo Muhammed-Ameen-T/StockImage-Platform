@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react" 
 import Link from "next/link"
 import { useImages } from "@/hooks/useImages"
 import { ImagesAPI } from "@/services/imageApi"
@@ -8,51 +8,76 @@ import { ImageCard } from "@/components/ui/ImageCard"
 import { Button } from "@/components/ui/Button"
 import { FilterBar } from "@/components/ui/FilterBar"
 import { SortDropdown } from "@/components/ui/SortDropdown"
-import { Pagination } from "@/components/ui/Pagination"
-import { Modal } from "@/components/ui/Modal"
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { EditImageModal } from "@/components/ui/EditImageModal"
 import { ViewImageModal } from "@/components/ui/ViewImageModal"
-import { APIError, ImageItem } from "@/types"
+import { ImageItem } from "@/types"
 import Providers from "@/components/layout/providers"
 import Protected from "@/components/layout/protected"
-import Image from "next/image"
 import { toast } from "sonner"
 
+const initialLimit = 8
+const loadMoreLimit = 4
+
 export default function Dashboard() {
-  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(initialLimit) 
   const [search, setSearch] = useState("")
   const [sortBy, setSortBy] = useState("order")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
-  const itemsPerPage = 8
-  const { images, total, isLoading, error, mutate } = useImages({
-    page,
-    limit: itemsPerPage,
+  
+  const { images, total, isLoading, error, mutate } = useImages({ 
+    limit, 
     search,
     sortBy,
     sortOrder,
   })
+  
+  const [isLoadMoreLoading, setIsLoadMoreLoading] = useState(false);
   const [errorState, setError] = useState<string | null>(null)
   const dragItem = useRef<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
 
-  // Modal states
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Check if any filters are applied
   const hasActiveFilters = search !== "" || sortBy !== "order" || sortOrder !== "desc"
+  
+
+  const totalLoadedImages = images.length
+  const hasMore = totalLoadedImages < total
+
+  const handleLoadMore = () => {
+    setIsLoadMoreLoading(true);
+    setLimit(prev => prev + loadMoreLimit);
+  }
+
+  useEffect(() => {
+    if (limit !== initialLimit && (search !== "" || sortBy !== "order" || sortOrder !== "desc")) {
+      setLimit(initialLimit);
+    }
+  }, [search, sortBy, sortOrder]);
+
+
+  useEffect(() => {
+      if (totalLoadedImages >= limit && isLoadMoreLoading) {
+          setIsLoadMoreLoading(false);
+      }
+      if (!hasMore && isLoadMoreLoading) {
+        setIsLoadMoreLoading(false);
+      }
+  }, [totalLoadedImages, limit, isLoadMoreLoading, hasMore]);
+
 
   const handleClearFilters = () => {
-    setSearch("");
-    setSortBy("order"); 
-    setSortOrder("desc"); 
-    setPage(1); 
-  };
+    setSearch("")
+    setSortBy("order")
+    setSortOrder("desc")
+    setLimit(initialLimit) 
+  }
 
-  // Modal handlers
   const handleViewImage = (image: ImageItem) => {
     setSelectedImage(image)
     setIsViewModalOpen(true)
@@ -70,7 +95,7 @@ export default function Dashboard() {
 
   const handleConfirmDelete = async () => {
     if (!selectedImage) return
-    
+
     setIsDeleting(true)
     setError(null)
     try {
@@ -99,73 +124,114 @@ export default function Dashboard() {
     handleCloseModals()
   }
 
-  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (sortBy !== 'order' || search !== '') {
+        e.preventDefault();
+        return;
+    }
     dragItem.current = id
     e.dataTransfer.effectAllowed = "move"
-    e.dataTransfer.setData("text/plain", id)
   }
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
-    setDragOverId(id)
+    if (sortBy === 'order' && search === '') {
+        e.dataTransfer.dropEffect = "move"
+        setDragOverId(id)
+    }
   }
 
   const handleDragEnter = (e: React.DragEvent, id: string) => {
     e.preventDefault()
+    if (sortBy === 'order' && search === '') {
+        setDragOverId(id)
+    }
   }
 
   const handleDragLeave = (e: React.DragEvent, id: string) => {
     e.preventDefault()
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+    if (sortBy === 'order' && search === '' && !e.currentTarget.contains(e.relatedTarget as Node)) {
       setDragOverId(null)
     }
   }
 
   const handleDrop = async (e: React.DragEvent, dropId: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!dragItem.current || dragItem.current === dropId) {
-      setDragOverId(null)
-      dragItem.current = null
-      return
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (sortBy !== 'order' || search !== '') {
+        setDragOverId(null);
+        dragItem.current = null;
+        return;
     }
 
-    const dragIndex = images.findIndex((i) => i._id === dragItem.current)
-    const dropIndex = images.findIndex((i) => i._id === dropId)
+    const draggedId = dragItem.current;
+    if (!draggedId || draggedId === dropId || !images) {
+      setDragOverId(null);
+      dragItem.current = null;
+      return;
+    }
 
-    const previousImage = dropIndex > 0 ? images[dropIndex - 1] : undefined
-    const nextImage = dropIndex < images.length - 1 ? images[dropIndex + 1] : undefined
+    const dragIndex = images.findIndex((i) => i._id === draggedId);
+    const dropIndex = images.findIndex((i) => i._id === dropId);
+
+    if (dragIndex === -1 || dropIndex === -1) {
+      setDragOverId(null);
+      dragItem.current = null;
+      return;
+    }
+
+    const tempImages = [...images];
+    const [draggedImage] = tempImages.splice(dragIndex, 1);
+    tempImages.splice(dropIndex, 0, draggedImage);
+
+    let newPreviousImage, newNextImage;
+    if (dropIndex > 0) {
+      newPreviousImage = tempImages[dropIndex - 1];
+    }
+    if (dropIndex < tempImages.length - 1) {
+      newNextImage = tempImages[dropIndex + 1];
+    }
+
+    const previousOrder = newPreviousImage?.order;
+    const nextOrder = newNextImage?.order;
 
     try {
-      const response = await ImagesAPI.reorder({
-        imageId: dragItem.current,
-        previousOrder: previousImage?.order,
-        nextOrder: nextImage?.order,
-      })
-      await mutate()
+      await ImagesAPI.reorder({
+        imageId: draggedId,
+        previousOrder,
+        nextOrder,
+      });
+      toast.success("Image reordered successfully");
+
+      await mutate(); 
     } catch (err) {
-      console.error("Reorder failed:", err)
-      setError("Failed to reorder images")
+      setError("Failed to reorder images");
+      toast.error("Failed to reorder image");
     }
 
+    dragItem.current = null;
+    setDragOverId(null);
+  };
+
+
+  const handleDragEnd = () => {
     dragItem.current = null
     setDragOverId(null)
   }
-
-  const handleDragEnd = (e: React.DragEvent, id: string) => {
-    console.log("Drag ended:", id)
-    dragItem.current = null
-    setDragOverId(null)
-  }
-
-  // Clear filters icon
+  
   const ClearFiltersIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
     </svg>
   )
+
+  const LoadingIcon = () => (
+    <svg className="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  );
 
   return (
     <Providers>
@@ -179,12 +245,11 @@ export default function Dashboard() {
                 onSort={(newSortBy, newSortOrder) => {
                   setSortBy(newSortBy)
                   setSortOrder(newSortOrder)
-                  setPage(1)
+                  setLimit(initialLimit) 
                 }}
                 initialSortBy={sortBy}
                 initialSortOrder={sortOrder}
               />
-              {/* Clear Filters Button - Only show when filters are active */}
               {hasActiveFilters && (
                 <Button
                   variant="outline"
@@ -199,7 +264,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Optional: Show active filters indicator */}
           {hasActiveFilters && (
             <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
               <span>Active filters:</span>
@@ -229,11 +293,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          {isLoading ? (
+          {isLoading && limit === initialLimit ? (
             <div className="py-10 text-sm text-muted-foreground">Loading images…</div>
-          ) : images.length === 0 ? (
+          ) : images.length === 0 && !isLoading ? ( 
             <div className="flex flex-col items-center justify-center p-10 bg-gray-50 rounded-lg border border-gray-200 text-center space-y-4 shadow-inner">
-              {/* Icon */}
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-500">
                 <svg
                   className="w-6 h-6"
@@ -250,19 +313,17 @@ export default function Dashboard() {
                   />
                 </svg>
               </div>
-
-              {/* Message */}
               <div className="space-y-1">
                 <p className="text-lg font-medium text-gray-800">No images found</p>
                 <p className="text-sm text-gray-500 max-w-sm">
-                  It looks like your gallery is empty. Start by uploading your first image to get started.
+                  {hasActiveFilters ? "Try adjusting your filters or search terms." : "It looks like your gallery is empty. Start by uploading your first image to get started."}
                 </p>
               </div>
-
-              {/* Call-to-action Button */}
-              <Link href="/upload" className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md">
-                Upload Your First Image
-              </Link>
+              {!hasActiveFilters && (
+                <Link href="/upload" className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md">
+                  Upload Your First Image
+                </Link>
+              )}
             </div>
           ) : (
             <>
@@ -274,39 +335,53 @@ export default function Dashboard() {
                     onView={() => handleViewImage(img)}
                     onEdit={() => handleEditImage(img)}
                     onDelete={() => handleDeleteImage(img)}
-                    onDragStart={(e) => handleDragStart(e, img._id)}
-                    onDragOver={(e) => handleDragOver(e, img._id)}
-                    onDrop={(e) => handleDrop(e, img._id)}
-                    onDragEnter={(e) => handleDragEnter(e, img._id)}
-                    onDragLeave={(e) => handleDragLeave(e, img._id)}
-                    onDragEnd={(e) => handleDragEnd(e, img._id)}
+                    draggable={sortBy === 'order' && search === ''}
+                    onDragStart={sortBy === 'order' && search === '' ? (e) => handleDragStart(e, img._id) : undefined}
+                    onDragOver={sortBy === 'order' && search === '' ? (e) => handleDragOver(e, img._id) : undefined}
+                    onDrop={sortBy === 'order' && search === '' ? (e) => handleDrop(e, img._id) : undefined}
+                    onDragEnter={sortBy === 'order' && search === '' ? (e) => handleDragEnter(e, img._id) : undefined}
+                    onDragLeave={sortBy === 'order' && search === '' ? (e) => handleDragLeave(e, img._id) : undefined}
+                    onDragEnd={sortBy === 'order' && search === '' ? handleDragEnd : undefined}
                     isDraggingOver={dragOverId === img._id}
+                    isReorderDisabled={sortBy !== 'order' || search !== ''}
                   />
                 ))}
               </div>
-              <Pagination
-                currentPage={page}
-                totalItems={total}
-                itemsPerPage={itemsPerPage}
-                onPageChange={(newPage) => {
-                  setPage(newPage)
-                  window.scrollTo({ top: 0, behavior: "smooth" })
-                }}
-              />
+              
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-8 flex justify-center">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleLoadMore}
+                    disabled={isLoadMoreLoading}
+                    leftIcon={isLoadMoreLoading ? <LoadingIcon /> : null}
+                    className="shadow-md"
+                  >
+                    {isLoadMoreLoading ? "Loading..." : `Load More (${loadMoreLimit} of ${total - totalLoadedImages})`}
+                  </Button>
+                </div>
+              )}
+
+              {!hasMore && total > 0 && (
+                <div className="mt-8 text-center text-sm text-gray-500">
+                  You&lsquo;ve viewed all {total} images.
+                </div>
+              )}
+              <div className="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-600">
+                  Showing {totalLoadedImages} of {total} results
+              </div>
             </>
           )}
 
-          {/* Centralized Modals */}
           {selectedImage && (
             <>
-              {/* View Image Modal */}
               <ViewImageModal
                 isOpen={isViewModalOpen}
                 onClose={handleCloseModals}
                 item={selectedImage}
               />
-
-              {/* Edit Image Modal */}
               <EditImageModal
                 isOpen={isEditModalOpen}
                 onClose={handleCloseModals}
@@ -314,63 +389,28 @@ export default function Dashboard() {
                 onUpdated={handleImageUpdated}
                 setError={setError}
               />
-
-              {/* Delete Confirmation Modal */}
-              <Modal
+              <ConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={handleCloseModals}
+                onConfirm={handleConfirmDelete}
+                isConfirming={isDeleting}
                 title="Delete Image"
-                className="max-w-md"
-              >
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
-                        src={selectedImage.url}
-                        alt={selectedImage.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-medium">
-                        Are you sure you want to delete this image?
-                      </p>
-                      <p className="text-sm text-gray-500 truncate mt-1">
-                        &quot;{selectedImage.title}&quot;
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        This action cannot be undone.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {errorState && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-red-800 text-sm">{errorState}</p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <Button
-                      variant="secondary"
-                      onClick={handleCloseModals}
-                      disabled={isDeleting}
-                      className="px-4 py-2"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleConfirmDelete}
-                      disabled={isDeleting}
-                      className="px-4 py-2"
-                    >
-                      {isDeleting ? "Deleting..." : "Delete Image"}
-                    </Button>
-                  </div>
-                </div>
-              </Modal>
+                message={
+                  <>
+                    Are you sure you want to delete this image?
+                    <p className="text-sm text-gray-500 truncate mt-1">
+                      &quot;{selectedImage.title}&quot;
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      This action cannot be undone.
+                    </p>
+                  </>
+                }
+                confirmText="Delete Image"
+                imagePreviewUrl={selectedImage.url}
+                imagePreviewAlt={selectedImage.title}
+                error={errorState}
+              />
             </>
           )}
         </main>

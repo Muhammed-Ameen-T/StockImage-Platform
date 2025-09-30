@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 import { Button } from "./Button"
 
-interface PaginationProps {
+interface PaginationProps { 
   currentPage: number
   totalItems: number
   itemsPerPage: number
@@ -16,11 +16,9 @@ export function Pagination({
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / itemsPerPage)
   
-  if (totalPages <= 1) return null
-
   const getPageNumbers = () => {
     const pages = []
-    const showPages = 5 // Maximum number of page buttons to show
+    const showPages = 5 
 
     if (totalPages <= showPages) {
       return Array.from({ length: totalPages }, (_, i) => i + 1)

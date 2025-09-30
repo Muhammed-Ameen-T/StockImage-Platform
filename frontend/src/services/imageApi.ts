@@ -1,9 +1,7 @@
 import api from "@/config/axios.config"
 import { ERROR_MESSAGES } from "@/constants/auth.messages"
-import { ImageItem } from "@/types"
 import { ImageResponse, ListParams } from "@/types/image.types"
 import { handleAxiosError } from "@/utils/exios-error-handler"
-import { toast } from "sonner"
 
 export const ImagesAPI = {
   /**
@@ -12,23 +10,22 @@ export const ImagesAPI = {
   list: async (params: ListParams = {}): Promise<ImageResponse> => {
     try {
       const {
-        page = 1,
+        skip = 0,
         limit = 8,
         search = "",
         sortBy = "order",
-        sortOrder = "desc"
+        sortOrder = "desc",
       } = params
 
       const query = new URLSearchParams()
-
-      query.append("page", page.toString())
+      query.append("skip", skip.toString())
       query.append("limit", limit.toString())
       query.append("search", search.trim())
       query.append("sortBy", sortBy)
       query.append("sortOrder", sortOrder)
 
       const response = await api.get(`/images/user?${query.toString()}`)
-
+      console.log("🚀 ~ response:", response)
       return response.data.data as ImageResponse
     } catch (error) {
       handleAxiosError(error, ERROR_MESSAGES.BULK_UPLOAD_FAILED)
@@ -125,7 +122,6 @@ export const ImagesAPI = {
       if (!response.data?.success) {
         throw new Error(response.data?.message || "Image deletion failed")
       }
-      toast.success("Image deleted successfully")
     } catch (error) {
       handleAxiosError(error, ERROR_MESSAGES.FAILED_DELETE_IMAGE)
     }

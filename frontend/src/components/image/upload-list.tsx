@@ -246,7 +246,7 @@ export default function UploadList({ onUploaded }: Props) {
             accept="image/jpeg,image/png"
             onChange={(e) => onChangeFiles(e.target.files)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            ref={fileInputRef} // Attach ref to file input
+            ref={fileInputRef} 
           />
           <div className="space-y-4">
             <div className="mx-auto w-16 h-16 text-gray-400 flex items-center justify-center">

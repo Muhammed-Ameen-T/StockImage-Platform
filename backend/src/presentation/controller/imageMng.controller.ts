@@ -116,24 +116,24 @@ export class ImageController implements IImageController {
    */
   async findUserImages(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const { page, limit, search, sortBy, sortOrder } = req.query;
-        const userId = req.decoded?.userId;
-        if (!userId) {
-          throw new CustomError(HttpResMsg.UNAUTHORIZED, HttpResCode.UNAUTHORIZED);
-        } 
+      const { skip, limit, search, sortBy, sortOrder } = req.query
+      const userId = req.decoded?.userId
+      if (!userId) {
+        throw new CustomError(HttpResMsg.UNAUTHORIZED, HttpResCode.UNAUTHORIZED)
+      }
 
-        const result = await this.findUserImagesUseCase.execute({
-          userId,
-          page: Number(page),
-          limit: Number(limit),
-          search: String(search),
-          sortBy: String(sortBy),
-          sortOrder: sortOrder === 'asc' ? 'asc' : 'desc',
-        });
+      const result = await this.findUserImagesUseCase.execute({
+        userId,
+        skip: skip ? Number(skip) : undefined,
+        limit: limit ? Number(limit) : undefined,
+        search: search ? String(search) : undefined,
+        sortBy: sortBy ? String(sortBy) : undefined,
+        sortOrder: sortOrder === "asc" ? "asc" : "desc",
+      })
 
-        sendResponse(res, HttpResCode.OK, SuccessMsg.IMAGES_FETCHED, result);
+      sendResponse(res, HttpResCode.OK, SuccessMsg.IMAGES_FETCHED, result)
     } catch (error) {
-        next(error);
+      next(error)
     }
   }
 

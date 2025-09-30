@@ -12,8 +12,14 @@ export interface IImageRepository {
     search?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
-  }): Promise<{ images: IImage[]; totalCount: number }>;
+  }): Promise<{ images: IImage[]; total: number }>;
   updateImage(imageId: string, updates: Partial<{ title: string; url: string; order: number }>): Promise<IImage | null>;
   findSurroundingImages( userId: string, previousOrder?: number, nextOrder?: number ): Promise<IImage[]>;
   findMaxOrder(userId: string): Promise<number>;
+  findMinOrder(userId: string): Promise<number>;
+  findNearestOrderByDirection(
+    userId: string,
+    targetOrder: number,
+    direction: 'next' | 'prev'
+  ): Promise<number | null>;
 }
