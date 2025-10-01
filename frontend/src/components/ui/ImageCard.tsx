@@ -39,23 +39,18 @@ export function ImageCard({
           : "border-gray-200 hover:border-gray-300"
       }`}
       onDragOver={(e) => {
-        console.log("ImageCard onDragOver:", item._id)
         onDragOver(e, item._id)
       }}
       onDrop={(e) => {
-        console.log("ImageCard onDrop:", item._id)
         onDrop(e, item._id)
       }}
       onDragEnter={(e) => {
-        console.log("ImageCard onDragEnter:", item._id)
         onDragEnter(e, item._id)
       }}
       onDragLeave={(e) => {
-        console.log("ImageCard onDragLeave:", item._id)
         onDragLeave(e, item._id)
       }}
       onDragEnd={(e) => {
-        console.log("ImageCard onDragEnd:", item._id)
         onDragEnd(e, item._id)
       }}
     >

@@ -25,7 +25,6 @@ export const ImagesAPI = {
       query.append("sortOrder", sortOrder)
 
       const response = await api.get(`/images/user?${query.toString()}`)
-      console.log("🚀 ~ response:", response)
       return response.data.data as ImageResponse
     } catch (error) {
       handleAxiosError(error, ERROR_MESSAGES.BULK_UPLOAD_FAILED)

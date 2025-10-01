@@ -64,7 +64,7 @@ export function useImages(params: UseImagesParams = {}) {
 
     useEffect(() => {
       if (error) {
-          console.error("Failed to fetch images:", error.message)
+        console.error("Failed to fetch images:", error.message)
       }
     }, [error])
 
