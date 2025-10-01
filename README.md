@@ -8,6 +8,7 @@ A web application for users to manage, search, sort, and reorder their personal 
 
   * **Gallery Management:** View, edit, and delete image metadata (title, file).
   * **Drag-and-Drop Reordering:** Intuitive custom reordering of images.
+  * **Edit and Delete Image:** User can able to delete or edit uploaded images.
   * **Load More Pagination:** Smooth, modern loading experience for large galleries.
   * **Filtering & Sorting:** Search images by title and sort by custom order or date.
   * **Secure Auth:** User login and signup via JWT.
