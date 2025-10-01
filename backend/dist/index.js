@@ -16,7 +16,7 @@ const errorHandler_middleware_1 = __importDefault(require("./presentation/middle
 const logger_middleware_1 = require("./presentation/middlewares/logger.middleware");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
-    origin: [env_config_1.env.CLIENT_ORIGIN, 'http://localhost:3000'],
+    origin: [env_config_1.env.CLIENT_ORIGIN, 'http://localhost:3000', 'https://stock-image-platform-9u9bbw5ns-muhammed-ameen-ts-projects.vercel.app'],
     credentials: true,
 }));
 app.use((0, cookie_parser_1.default)());

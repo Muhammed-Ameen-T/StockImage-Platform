@@ -104,18 +104,18 @@ let ImageController = class ImageController {
      */
     async findUserImages(req, res, next) {
         try {
-            const { page, limit, search, sortBy, sortOrder } = req.query;
+            const { skip, limit, search, sortBy, sortOrder } = req.query;
             const userId = req.decoded?.userId;
             if (!userId) {
                 throw new custom_error_1.CustomError(httpResponseCode_utils_1.HttpResMsg.UNAUTHORIZED, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
             }
             const result = await this.findUserImagesUseCase.execute({
                 userId,
-                page: Number(page),
-                limit: Number(limit),
-                search: String(search),
-                sortBy: String(sortBy),
-                sortOrder: sortOrder === 'asc' ? 'asc' : 'desc',
+                skip: skip ? Number(skip) : undefined,
+                limit: limit ? Number(limit) : undefined,
+                search: search ? String(search) : undefined,
+                sortBy: sortBy ? String(sortBy) : undefined,
+                sortOrder: sortOrder === "asc" ? "asc" : "desc",
             });
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.IMAGES_FETCHED, result);
         }

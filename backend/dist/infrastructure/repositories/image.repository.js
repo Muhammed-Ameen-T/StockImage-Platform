@@ -73,18 +73,17 @@ let ImageRepository = class ImageRepository {
      * @returns {Promise<{ images: IImage[]; totalCount: number }>} Paginated and filtered image list.
      */
     async findUserImages(params) {
-        const { userId, page = 1, limit = 8, search, sortBy = 'order', sortOrder = 'desc', } = params;
+        const { userId, skip = 0, limit = 8, search, sortBy = "order", sortOrder = "desc", } = params;
         const filter = { userId };
         if (search) {
-            filter.title = { $regex: search, $options: 'i' };
+            filter.title = { $regex: search, $options: "i" };
         }
-        const skip = (page - 1) * limit;
-        const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
-        const [images, totalCount] = await Promise.all([
+        const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+        const [images, total] = await Promise.all([
             image_modal_1.ImageModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
             image_modal_1.ImageModel.countDocuments(filter),
         ]);
-        return { images, totalCount };
+        return { images, total };
     }
     /**
      * Updates a single image's metadata.
@@ -131,6 +130,43 @@ let ImageRepository = class ImageRepository {
             .select("order")
             .lean();
         return result?.order || 0;
+    }
+    /**
+     * Finds the lowest order value for a user's images.
+     * @param userId - ID of the user
+     * @returns Min order number or 0 if no images exist
+     */
+    async findMinOrder(userId) {
+        const result = await image_modal_1.ImageModel
+            .findOne({ userId })
+            .sort({ order: 1 })
+            .select("order")
+            .lean();
+        return result?.order || 0;
+    }
+    /**
+   * Finds the nearest order value in the specified direction from the target.
+   * @param userId - ID of the user
+   * @param targetOrder - The reference order value
+   * @param direction - 'next' for higher, 'prev' for lower
+   * @returns Nearest order value or null if none exists
+   */
+    async findNearestOrderByDirection(userId, targetOrder, direction) {
+        const query = {
+            userId,
+            order: direction === 'next'
+                ? { $gt: targetOrder }
+                : { $lt: targetOrder }
+        };
+        const sort = {
+            order: direction === 'next' ? 1 : -1
+        };
+        const result = await image_modal_1.ImageModel
+            .findOne(query)
+            .sort(sort)
+            .select('order')
+            .lean();
+        return result?.order ?? null;
     }
 };
 exports.ImageRepository = ImageRepository;

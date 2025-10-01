@@ -17,10 +17,26 @@ const inversify_1 = require("inversify");
 const types_1 = require("../../core/types");
 const custom_error_1 = require("../../utils/errors/custom.error");
 const httpResponseCode_utils_1 = require("../../utils/constants/httpResponseCode.utils");
+const commonErrorMsg_constants_1 = require("../../utils/constants/commonErrorMsg.constants");
+/**
+ * Use case for reordering an image within a user's image collection.
+ */
 let ReorderImageUseCase = class ReorderImageUseCase {
+    /**
+     * @param imageRepository - Repository for accessing and updating image data
+     */
     constructor(imageRepository) {
         this.imageRepository = imageRepository;
     }
+    /**
+     * Executes the reordering logic for a given image.
+     * @param dto - Data transfer object containing image reordering details
+     * @param dto.imageId - ID of the image to reorder
+     * @param dto.previousOrder - Order value of the previous image
+     * @param dto.nextOrder - Order value of the next image
+     * @param dto.userId - ID of the user who owns the image
+     * @throws CustomError if context is invalid or image update fails
+     */
     async execute(dto) {
         const { imageId, previousOrder, nextOrder, userId } = dto;
         let newOrder;
@@ -28,13 +44,25 @@ let ReorderImageUseCase = class ReorderImageUseCase {
             newOrder = (previousOrder + nextOrder) / 2;
         }
         else if (previousOrder === undefined && nextOrder !== undefined) {
-            newOrder = nextOrder - 100;
+            let nearestPrev = await this.imageRepository.findNearestOrderByDirection(userId, nextOrder, 'next');
+            if (nearestPrev) {
+                newOrder = (nextOrder + nearestPrev) / 2;
+            }
+            else {
+                newOrder = nextOrder + 100;
+            }
         }
         else if (previousOrder !== undefined && nextOrder === undefined) {
-            newOrder = previousOrder + 100;
+            let nearestNext = await this.imageRepository.findNearestOrderByDirection(userId, previousOrder, 'prev');
+            if (nearestNext) {
+                newOrder = (previousOrder + nearestNext) / 2;
+            }
+            else {
+                newOrder = previousOrder - 100;
+            }
         }
         else {
-            throw new custom_error_1.CustomError('Invalid reorder context', httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
+            throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.INVALID_ERROR_CONTEXT, httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
         }
         if (newOrder === previousOrder || newOrder === nextOrder) {
             const surrounding = await this.imageRepository.findSurroundingImages(userId, previousOrder, nextOrder);
@@ -44,7 +72,6 @@ let ReorderImageUseCase = class ReorderImageUseCase {
                 await this.imageRepository.updateImage(img._id.toString(), { order: baseOrder });
                 baseOrder += spacing;
             }
-            // Retry calculation
             if (previousOrder !== undefined && nextOrder !== undefined) {
                 newOrder = (previousOrder + nextOrder) / 2;
             }
@@ -55,9 +82,10 @@ let ReorderImageUseCase = class ReorderImageUseCase {
                 newOrder = previousOrder + 100;
             }
         }
+        console.log(`✅ Updating image ${imageId} to new order: ${newOrder}`);
         const updated = await this.imageRepository.updateImage(imageId, { order: newOrder });
         if (!updated) {
-            throw new custom_error_1.CustomError('Image not found', httpResponseCode_utils_1.HttpResCode.NOT_FOUND);
+            throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.IMAGE_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.NOT_FOUND);
         }
     }
 };

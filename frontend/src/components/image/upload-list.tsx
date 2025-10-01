@@ -5,6 +5,7 @@ import { Upload } from "lucide-react"
 import Image from "next/image"
 import { ImagesAPI } from "@/services/imageApi"
 import { Input } from "@/components/ui/Input"
+import { toast } from "sonner"
 
 type FileEntry = {
   file: File
@@ -199,8 +200,9 @@ export default function UploadList({ onUploaded }: Props) {
       setFiles([])
       setErrors({})
       if (fileInputRef.current) {
-        fileInputRef.current.value = "" // Reset file input after upload
+        fileInputRef.current.value = "" 
       }
+      toast.success('Image Uploaded Successfully.')
       onUploaded()
     } catch (error) {
       console.error("Upload failed:", error)
@@ -246,7 +248,8 @@ export default function UploadList({ onUploaded }: Props) {
             accept="image/jpeg,image/png"
             onChange={(e) => onChangeFiles(e.target.files)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            ref={fileInputRef} 
+            ref={fileInputRef}
+            title="Upload JPEG or PNG images"
           />
           <div className="space-y-4">
             <div className="mx-auto w-16 h-16 text-gray-400 flex items-center justify-center">

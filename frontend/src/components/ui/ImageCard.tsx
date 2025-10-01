@@ -9,13 +9,15 @@ interface ImageCardProps {
   onView: () => void
   onEdit: () => void
   onDelete: () => void
-  onDragStart: (e: React.DragEvent, id: string) => void
-  onDragOver: (e: React.DragEvent, id: string) => void
-  onDrop: (e: React.DragEvent, id: string) => void
-  onDragEnter: (e: React.DragEvent, id: string) => void
-  onDragLeave: (e: React.DragEvent, id: string) => void
-  onDragEnd: (e: React.DragEvent, id: string) => void
+  onDragStart?: (e: React.DragEvent, id: string) => void
+  onDragOver?: (e: React.DragEvent, id: string) => void
+  onDrop?: (e: React.DragEvent, id: string) => void
+  onDragEnter?: (e: React.DragEvent, id: string) => void
+  onDragLeave?: (e: React.DragEvent, id: string) => void
+  onDragEnd?: (e: React.DragEvent, id: string) => void
   isDraggingOver: boolean
+  draggable: boolean 
+  isReorderDisabled: boolean
 }
 
 export function ImageCard({
@@ -39,19 +41,19 @@ export function ImageCard({
           : "border-gray-200 hover:border-gray-300"
       }`}
       onDragOver={(e) => {
-        onDragOver(e, item._id)
+        onDragOver?.(e, item._id)
       }}
       onDrop={(e) => {
-        onDrop(e, item._id)
+        onDrop?.(e, item._id)
       }}
       onDragEnter={(e) => {
-        onDragEnter(e, item._id)
+        onDragEnter?.(e, item._id)
       }}
       onDragLeave={(e) => {
-        onDragLeave(e, item._id)
+        onDragLeave?.(e, item._id)
       }}
       onDragEnd={(e) => {
-        onDragEnd(e, item._id)
+        onDragEnd?.(e, item._id)
       }}
     >
       {/* Image Container */}
@@ -72,8 +74,8 @@ export function ImageCard({
           className="absolute top-3 left-3 p-2 rounded-lg bg-white/90 backdrop-blur-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing hover:bg-white hover:scale-110"
           aria-label="Drag to reorder"
           draggable
-          onDragStart={(e) => onDragStart(e, item._id)}
-          onDragEnd={(e) => onDragEnd(e, item._id)}
+          onDragStart={(e) => onDragStart?.(e, item._id)}
+          onDragEnd={(e) => onDragEnd?.(e, item._id)}
         >
           <GripVertical size={16} />
         </button>

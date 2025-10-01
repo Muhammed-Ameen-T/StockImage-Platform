@@ -18,19 +18,34 @@ const types_1 = require("../../core/types");
 const custom_error_1 = require("../../utils/errors/custom.error");
 const httpResponseCode_utils_1 = require("../../utils/constants/httpResponseCode.utils");
 /**
- * Use case for retrieving user-uploaded images with filtering, sorting, and pagination.
+ * Use case for retrieving images associated with a specific user.
  */
 let FindUserImagesUseCase = class FindUserImagesUseCase {
+    /**
+     * @param imageRepository - Repository for accessing image data
+     */
     constructor(imageRepository) {
         this.imageRepository = imageRepository;
     }
+    /**
+     * Executes the use case to find user images.
+     * @param params - Parameters for filtering and pagination
+     * @param params.userId - ID of the user whose images are to be retrieved
+     * @param [params.skip] - Number of records to skip
+     * @param [params.limit] - Maximum number of records to return
+     * @param [params.search] - Search keyword for filtering images
+     * @param [params.sortBy] - Field to sort by
+     * @param [params.sortOrder] - Sort order: 'asc' or 'desc'
+     * @returns A promise resolving to an object containing images and total count
+     * @throws CustomError if retrieval fails
+     */
     async execute(params) {
         try {
             return await this.imageRepository.findUserImages(params);
         }
         catch (error) {
-            console.error('❌ Error fetching user images:', error);
-            throw new custom_error_1.CustomError('Failed to retrieve images', httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
+            console.error("❌ Error fetching user images:", error);
+            throw new custom_error_1.CustomError("Failed to retrieve images", httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
         }
     }
 };

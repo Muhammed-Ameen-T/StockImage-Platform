@@ -73,7 +73,7 @@ let UserAuthController = class UserAuthController {
             res.cookie('refreshToken', result.refreshToken, {
                 httpOnly: true,
                 secure: env_config_1.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                sameSite: 'none',
                 maxAge: parseInt(env_config_1.env.MAX_AGE, 10),
             });
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.USER_REGISTERED, {
@@ -100,7 +100,7 @@ let UserAuthController = class UserAuthController {
             res.cookie('refreshToken', response.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                sameSite: 'none',
                 maxAge: parseInt(process.env.MAX_AGE || '0', 10),
             });
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.USER_LOGGED_IN, {
