@@ -23,7 +23,7 @@ A web application for users to manage, search, sort, and reorder their personal 
 | **State/Data** | **SWR** | Efficient data fetching and caching |
 | **Styling** | **Tailwind CSS** | Utility-first CSS framework |
 | **Backend** | **Node.js + Express** | Core API framework |
-| **Architecture** | **InversifyJS** | Dependency Injection (Repository Pattern) |
+| **Architecture** | **InversifyJS** | Dependency Injection (Clean Architucture) |
 | **Database** | **MongoDB / Mongoose** | Data persistence |
 | **Container** | **Docker** | Development environment setup |
 
