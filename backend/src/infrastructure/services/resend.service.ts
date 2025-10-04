@@ -15,7 +15,7 @@ class ResendService {
 
       if (response.error) {
         console.error('❌ Resend error:', response.error);
-        throw new Error('Failed to send email');
+        throw new Error('Failed to send email.');
       }
 
       console.log(`✅ Email sent to ${recipient}: ${subject}`);
