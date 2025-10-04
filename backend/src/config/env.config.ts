@@ -178,4 +178,11 @@ export const env = {
     }
     return process.env.NODEMAILER_PASSWORD;
   },
+
+  get RESEND_API(): string {
+    if (!process.env.RESEND_API) {
+      throw new CustomError(EnvErrMsg.RESEND_API_UNDEFINED, HttpResCode.INTERNAL_SERVER_ERROR);
+    }
+    return process.env.RESEND_API;
+  },
 };
