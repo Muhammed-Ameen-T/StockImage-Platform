@@ -38,10 +38,10 @@ const jwt = __importStar(require("jsonwebtoken"));
 const env_config_1 = require("../../config/env.config");
 class JwtService {
     constructor() {
-        this.accessSecret = env_config_1.env.ACCESS_TOKEN_SECRET;
-        this.refreshSecret = env_config_1.env.REFRESH_TOKEN_SECRET;
-        this.accessExpiry = env_config_1.env.ACCESS_TOKEN_EXPIRY;
-        this.refreshExpiry = env_config_1.env.REFRESH_TOKEN_EXPIRY;
+        this._accessSecret = env_config_1.env.ACCESS_TOKEN_SECRET;
+        this._refreshSecret = env_config_1.env.REFRESH_TOKEN_SECRET;
+        this._accessExpiry = env_config_1.env.ACCESS_TOKEN_EXPIRY;
+        this._refreshExpiry = env_config_1.env.REFRESH_TOKEN_EXPIRY;
     }
     /**
      * Generates an access token for authentication.
@@ -50,8 +50,8 @@ class JwtService {
      * @returns {string} A signed JWT access token.
      */
     generateAccessToken(userId) {
-        return jwt.sign({ userId }, this.accessSecret, {
-            expiresIn: this.accessExpiry,
+        return jwt.sign({ userId }, this._accessSecret, {
+            expiresIn: this._accessExpiry,
         });
     }
     /**
@@ -61,8 +61,8 @@ class JwtService {
      * @returns {string} A signed JWT refresh token.
      */
     generateRefreshToken(userId) {
-        return jwt.sign({ userId }, this.refreshSecret, {
-            expiresIn: this.refreshExpiry,
+        return jwt.sign({ userId }, this._refreshSecret, {
+            expiresIn: this._refreshExpiry,
         });
     }
     /**
@@ -72,7 +72,7 @@ class JwtService {
      * @throws {jwt.JsonWebTokenError} If the token is invalid or expired.
      */
     verifyAccessToken(token) {
-        return jwt.verify(token, this.accessSecret);
+        return jwt.verify(token, this._accessSecret);
     }
     /**
      * Verifies and decodes a refresh token.
@@ -81,7 +81,7 @@ class JwtService {
      * @throws {jwt.JsonWebTokenError} If the token is invalid or expired.
      */
     verifyRefreshToken(token) {
-        return jwt.verify(token, this.refreshSecret);
+        return jwt.verify(token, this._refreshSecret);
     }
 }
 exports.JwtService = JwtService;

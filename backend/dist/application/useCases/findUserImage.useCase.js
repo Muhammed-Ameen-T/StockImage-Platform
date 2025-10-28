@@ -17,6 +17,7 @@ const inversify_1 = require("inversify");
 const types_1 = require("../../core/types");
 const custom_error_1 = require("../../utils/errors/custom.error");
 const httpResponseCode_utils_1 = require("../../utils/constants/httpResponseCode.utils");
+const commonErrorMsg_constants_1 = require("../../utils/constants/commonErrorMsg.constants");
 /**
  * Use case for retrieving images associated with a specific user.
  */
@@ -24,8 +25,8 @@ let FindUserImagesUseCase = class FindUserImagesUseCase {
     /**
      * @param imageRepository - Repository for accessing image data
      */
-    constructor(imageRepository) {
-        this.imageRepository = imageRepository;
+    constructor(_imageRepository) {
+        this._imageRepository = _imageRepository;
     }
     /**
      * Executes the use case to find user images.
@@ -41,11 +42,11 @@ let FindUserImagesUseCase = class FindUserImagesUseCase {
      */
     async execute(params) {
         try {
-            return await this.imageRepository.findUserImages(params);
+            return await this._imageRepository.findUserImages(params);
         }
         catch (error) {
             console.error("❌ Error fetching user images:", error);
-            throw new custom_error_1.CustomError("Failed to retrieve images", httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
+            throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.IMAGE_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
         }
     }
 };

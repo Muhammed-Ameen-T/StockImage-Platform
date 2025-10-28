@@ -21,6 +21,7 @@ const commonSuccessMsg_constants_1 = require("../../utils/constants/commonSucces
 const custom_error_1 = require("../../utils/errors/custom.error");
 const image_dto_1 = require("../../application/dtos/image.dto");
 const commonErrorMsg_constants_1 = require("../../utils/constants/commonErrorMsg.constants");
+const arrayNormalize_util_1 = require("../../utils/helpers/arrayNormalize.util");
 /**
  * Controller for handling image-related operations such as bulk upload, deletion, and retrieval.
  * @implements {IImageController}
@@ -33,12 +34,12 @@ let ImageController = class ImageController {
      * @param {IDeleteImageUseCase} deleteImageUseCase - Use case for deleting a specific image.
      * @param {IFindUserImagesUseCase} findUserImagesUseCase - Use case for retrieving user images with filters.
      */
-    constructor(bulkUploadUseCase, deleteImageUseCase, findUserImagesUseCase, editImageUseCase, reorderImageUseCase) {
-        this.bulkUploadUseCase = bulkUploadUseCase;
-        this.deleteImageUseCase = deleteImageUseCase;
-        this.findUserImagesUseCase = findUserImagesUseCase;
-        this.editImageUseCase = editImageUseCase;
-        this.reorderImageUseCase = reorderImageUseCase;
+    constructor(_bulkUploadUseCase, _deleteImageUseCase, _findUserImagesUseCase, _editImageUseCase, _reorderImageUseCase) {
+        this._bulkUploadUseCase = _bulkUploadUseCase;
+        this._deleteImageUseCase = _deleteImageUseCase;
+        this._findUserImagesUseCase = _findUserImagesUseCase;
+        this._editImageUseCase = _editImageUseCase;
+        this._reorderImageUseCase = _reorderImageUseCase;
     }
     /**
      * Handles bulk image upload via file + title.
@@ -52,12 +53,11 @@ let ImageController = class ImageController {
             if (!userId) {
                 throw new custom_error_1.CustomError(httpResponseCode_utils_1.HttpResMsg.UNAUTHORIZED, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
             }
-            const files = req.files?.["files"] || [];
-            const normalize = (field) => Array.isArray(field) ? field : field !== undefined ? [field] : [];
-            const titles = normalize(req.body.titles);
-            const originalFileNames = normalize(req.body.originalFileNames);
-            const mimeTypes = normalize(req.body.mimeTypes);
-            const fileSizes = normalize(req.body.fileSizes).map(Number);
+            const files = req.files?.['files'] || [];
+            const titles = (0, arrayNormalize_util_1.normalizeArray)(req.body.titles);
+            const originalFileNames = (0, arrayNormalize_util_1.normalizeArray)(req.body.originalFileNames);
+            const mimeTypes = (0, arrayNormalize_util_1.normalizeArray)(req.body.mimeTypes);
+            const fileSizes = (0, arrayNormalize_util_1.normalizeArray)(req.body.fileSizes).map(Number); // Normalize strings, then map to numbers
             if (titles.length !== files.length ||
                 originalFileNames.length !== files.length ||
                 mimeTypes.length !== files.length ||
@@ -65,7 +65,7 @@ let ImageController = class ImageController {
                 throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.INVALID_FILE_ARRAY, httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
             }
             const dto = new image_dto_1.BulkUploadDTO(userId, files, titles, originalFileNames, mimeTypes, fileSizes);
-            await this.bulkUploadUseCase.execute(dto);
+            await this._bulkUploadUseCase.execute(dto);
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.IMAGES_UPLOADED);
         }
         catch (error) {
@@ -84,7 +84,7 @@ let ImageController = class ImageController {
     async deleteImage(req, res, next) {
         try {
             const { id } = req.params;
-            await this.deleteImageUseCase.execute(id);
+            await this._deleteImageUseCase.execute(id);
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.IMAGE_DELETED);
         }
         catch (error) {
@@ -109,13 +109,13 @@ let ImageController = class ImageController {
             if (!userId) {
                 throw new custom_error_1.CustomError(httpResponseCode_utils_1.HttpResMsg.UNAUTHORIZED, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
             }
-            const result = await this.findUserImagesUseCase.execute({
+            const result = await this._findUserImagesUseCase.execute({
                 userId,
                 skip: skip ? Number(skip) : undefined,
                 limit: limit ? Number(limit) : undefined,
                 search: search ? String(search) : undefined,
                 sortBy: sortBy ? String(sortBy) : undefined,
-                sortOrder: sortOrder === "asc" ? "asc" : "desc",
+                sortOrder: sortOrder === 'asc' ? 'asc' : 'desc',
             });
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.IMAGES_FETCHED, result);
         }
@@ -144,7 +144,7 @@ let ImageController = class ImageController {
             const originalFileName = req.body.originalFileName;
             const mimeType = req.body.mimeType;
             const fileSize = req.body.fileSize ? Number(req.body.fileSize) : undefined;
-            await this.editImageUseCase.execute(id, {
+            await this._editImageUseCase.execute(id, {
                 title,
                 file,
                 originalFileName,
@@ -174,7 +174,7 @@ let ImageController = class ImageController {
             }
             const { imageId, previousOrder, nextOrder } = req.body;
             const dto = new image_dto_1.ReorderImageDTO(imageId, userId, previousOrder, nextOrder);
-            await this.reorderImageUseCase.execute(dto);
+            await this._reorderImageUseCase.execute(dto);
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.IMAGE_REORDERED);
         }
         catch (error) {

@@ -143,4 +143,10 @@ exports.env = {
         }
         return process.env.NODEMAILER_PASSWORD;
     },
+    get RESEND_API() {
+        if (!process.env.RESEND_API) {
+            throw new custom_error_1.CustomError(envErrorMsg_constants_1.EnvErrMsg.RESEND_API_UNDEFINED, httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
+        }
+        return process.env.RESEND_API;
+    },
 };

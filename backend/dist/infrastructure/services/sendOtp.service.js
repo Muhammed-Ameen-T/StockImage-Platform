@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendOtp = void 0;
-const nodemailer_service_1 = require("./nodemailer.service");
+// import { EmailService } from './nodemailer.service';
+const resend_service_1 = require("./resend.service");
 /**
  * Sends an OTP email to a user.
  * @param {string} email - Recipient email.
@@ -16,6 +17,6 @@ const sendOtp = async (email, otp) => {
       <p style="color: #ff4444;">⚠️ This OTP expires in 5 minutes.</p>
     </div>
   `;
-    await nodemailer_service_1.EmailService.sendEmail(email, 'Your OTP Code', htmlContent);
+    await resend_service_1.EmailService.sendEmail(email, 'Your OTP Code', htmlContent);
 };
 exports.sendOtp = sendOtp;

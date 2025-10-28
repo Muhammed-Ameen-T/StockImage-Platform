@@ -35,11 +35,11 @@ let UserAuthController = class UserAuthController {
      * @param {IVerifyOtpUseCase} verifyOtpUseCase - Use case for verifying OTP and registering/logging in a user.
      * @param {ILoginUserUseCase} loginUserUseCase - Use case for user login.
      */
-    constructor(sendOtpUseCase, verifyOtpUseCase, loginUserUseCase, changePasswordUseCase) {
-        this.sendOtpUseCase = sendOtpUseCase;
-        this.verifyOtpUseCase = verifyOtpUseCase;
-        this.loginUserUseCase = loginUserUseCase;
-        this.changePasswordUseCase = changePasswordUseCase;
+    constructor(_sendOtpUseCase, _verifyOtpUseCase, _loginUserUseCase, _changePasswordUseCase) {
+        this._sendOtpUseCase = _sendOtpUseCase;
+        this._verifyOtpUseCase = _verifyOtpUseCase;
+        this._loginUserUseCase = _loginUserUseCase;
+        this._changePasswordUseCase = _changePasswordUseCase;
     }
     /**
      * Sends an OTP to the provided email address for user registration or verification.
@@ -51,7 +51,7 @@ let UserAuthController = class UserAuthController {
     async sendOtp(req, res, next) {
         try {
             const { email } = req.body;
-            await this.sendOtpUseCase.execute(email.trim());
+            await this._sendOtpUseCase.execute(email.trim());
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.OTP_SENT);
         }
         catch (error) {
@@ -69,7 +69,7 @@ let UserAuthController = class UserAuthController {
         try {
             const { name, email, phoneNumber, password, otp } = req.body;
             const dto = new auth_dto_1.VerifyOtpDTO(name, email, phoneNumber, otp, password);
-            const result = await this.verifyOtpUseCase.execute(dto);
+            const result = await this._verifyOtpUseCase.execute(dto);
             res.cookie('refreshToken', result.refreshToken, {
                 httpOnly: true,
                 secure: env_config_1.env.NODE_ENV === 'production',
@@ -96,7 +96,7 @@ let UserAuthController = class UserAuthController {
         try {
             const { email, password } = req.body;
             const dto = new auth_dto_1.LoginDTO(email, password);
-            const response = await this.loginUserUseCase.execute(dto);
+            const response = await this._loginUserUseCase.execute(dto);
             res.cookie('refreshToken', response.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -129,7 +129,7 @@ let UserAuthController = class UserAuthController {
             }
             const { oldPassword, newPassword } = req.body;
             const dto = new auth_dto_1.ChangePasswordDTO(userId, oldPassword, newPassword);
-            await this.changePasswordUseCase.execute(dto);
+            await this._changePasswordUseCase.execute(dto);
             (0, sendResponse_utils_1.sendResponse)(res, httpResponseCode_utils_1.HttpResCode.OK, commonSuccessMsg_constants_1.SuccessMsg.PASSWORD_CHANGED);
         }
         catch (error) {

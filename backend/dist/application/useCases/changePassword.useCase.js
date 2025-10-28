@@ -24,8 +24,8 @@ const httpResponseCode_utils_1 = require("../../utils/constants/httpResponseCode
  * Use case for changing a user's password.
  */
 let ChangePasswordUseCase = class ChangePasswordUseCase {
-    constructor(userRepository) {
-        this.userRepository = userRepository;
+    constructor(_userRepository) {
+        this._userRepository = _userRepository;
     }
     /**
      * Executes the password change process.
@@ -37,7 +37,7 @@ let ChangePasswordUseCase = class ChangePasswordUseCase {
      * @throws {CustomError} If user not found or old password mismatch
      */
     async execute(dto) {
-        const user = await this.userRepository.findById(dto.userId);
+        const user = await this._userRepository.findById(dto.userId);
         if (!user || !user._id) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.USER_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
         }
@@ -46,7 +46,7 @@ let ChangePasswordUseCase = class ChangePasswordUseCase {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.PASSWORD_MISMATCH, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
         }
         const hashed = await (0, passwordHash_util_1.hashPassword)(dto.newPassword);
-        await this.userRepository.updatePassword(dto.userId, hashed);
+        await this._userRepository.updatePassword(dto.userId, hashed);
     }
 };
 exports.ChangePasswordUseCase = ChangePasswordUseCase;

@@ -25,8 +25,8 @@ let ReorderImageUseCase = class ReorderImageUseCase {
     /**
      * @param imageRepository - Repository for accessing and updating image data
      */
-    constructor(imageRepository) {
-        this.imageRepository = imageRepository;
+    constructor(_imageRepository) {
+        this._imageRepository = _imageRepository;
     }
     /**
      * Executes the reordering logic for a given image.
@@ -44,7 +44,7 @@ let ReorderImageUseCase = class ReorderImageUseCase {
             newOrder = (previousOrder + nextOrder) / 2;
         }
         else if (previousOrder === undefined && nextOrder !== undefined) {
-            let nearestPrev = await this.imageRepository.findNearestOrderByDirection(userId, nextOrder, 'next');
+            let nearestPrev = await this._imageRepository.findNearestOrderByDirection(userId, nextOrder, 'next');
             if (nearestPrev) {
                 newOrder = (nextOrder + nearestPrev) / 2;
             }
@@ -53,7 +53,7 @@ let ReorderImageUseCase = class ReorderImageUseCase {
             }
         }
         else if (previousOrder !== undefined && nextOrder === undefined) {
-            let nearestNext = await this.imageRepository.findNearestOrderByDirection(userId, previousOrder, 'prev');
+            let nearestNext = await this._imageRepository.findNearestOrderByDirection(userId, previousOrder, 'prev');
             if (nearestNext) {
                 newOrder = (previousOrder + nearestNext) / 2;
             }
@@ -65,11 +65,11 @@ let ReorderImageUseCase = class ReorderImageUseCase {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.INVALID_ERROR_CONTEXT, httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
         }
         if (newOrder === previousOrder || newOrder === nextOrder) {
-            const surrounding = await this.imageRepository.findSurroundingImages(userId, previousOrder, nextOrder);
+            const surrounding = await this._imageRepository.findSurroundingImages(userId, previousOrder, nextOrder);
             let baseOrder = 1000;
             const spacing = 100;
             for (const img of surrounding) {
-                await this.imageRepository.updateImage(img._id.toString(), { order: baseOrder });
+                await this._imageRepository.updateImage(img._id.toString(), { order: baseOrder });
                 baseOrder += spacing;
             }
             if (previousOrder !== undefined && nextOrder !== undefined) {
@@ -83,7 +83,7 @@ let ReorderImageUseCase = class ReorderImageUseCase {
             }
         }
         console.log(`✅ Updating image ${imageId} to new order: ${newOrder}`);
-        const updated = await this.imageRepository.updateImage(imageId, { order: newOrder });
+        const updated = await this._imageRepository.updateImage(imageId, { order: newOrder });
         if (!updated) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.IMAGE_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.NOT_FOUND);
         }

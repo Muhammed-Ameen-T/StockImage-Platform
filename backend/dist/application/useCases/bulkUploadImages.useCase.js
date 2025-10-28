@@ -20,10 +20,11 @@ const mongoose_1 = require("mongoose");
 const commonErrorMsg_constants_1 = require("../../utils/constants/commonErrorMsg.constants");
 const custom_error_1 = require("../../utils/errors/custom.error");
 const httpResponseCode_utils_1 = require("../../utils/constants/httpResponseCode.utils");
+const getError_util_1 = require("../../utils/helpers/getError.util");
 let BulkUploadImagesUseCase = class BulkUploadImagesUseCase {
-    constructor(imageRepository, cloudinaryService) {
-        this.imageRepository = imageRepository;
-        this.cloudinaryService = cloudinaryService;
+    constructor(_imageRepository, _cloudinaryService) {
+        this._imageRepository = _imageRepository;
+        this._cloudinaryService = _cloudinaryService;
     }
     /**
      * Uploads multiple image files to Cloudinary and stores metadata in DB.
@@ -38,7 +39,7 @@ let BulkUploadImagesUseCase = class BulkUploadImagesUseCase {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.INVALID_FILE_ARRAY, httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
         }
         try {
-            const highestOrder = await this.imageRepository.findMaxOrder(userId);
+            const highestOrder = await this._imageRepository.findMaxOrder(userId);
             const formatted = [];
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -46,7 +47,7 @@ let BulkUploadImagesUseCase = class BulkUploadImagesUseCase {
                 const originalFileName = originalFileNames[i];
                 const mimeType = mimeTypes[i];
                 const fileSize = fileSizes[i];
-                const url = await this.cloudinaryService.uploadImage(file.path);
+                const url = await this._cloudinaryService.uploadImage(file.path);
                 formatted.push({
                     userId: new mongoose_1.Types.ObjectId(userId),
                     title,
@@ -57,10 +58,13 @@ let BulkUploadImagesUseCase = class BulkUploadImagesUseCase {
                     order: highestOrder + (i + 1) * 1000,
                 });
             }
-            await this.imageRepository.addMany(formatted);
+            await this._imageRepository.addMany(formatted);
         }
         catch (error) {
-            throw new custom_error_1.CustomError(error?.message || commonErrorMsg_constants_1.ErrorMsg.UPLOAD_FAILED, httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
+            if (error instanceof custom_error_1.CustomError) {
+                throw error;
+            }
+            throw new custom_error_1.CustomError((0, getError_util_1.getErrorMessage)(error) || commonErrorMsg_constants_1.ErrorMsg.UPLOAD_FAILED, httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
         }
     }
 };

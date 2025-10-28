@@ -47,4 +47,5 @@ exports.EnvErrMsg = {
     TWILIO_AUTH_TOKEN_UNDEFINED: 'Twilio Auth Token undefined.',
     TWILIO_ACCOUNT_SID_UNDEFINED: 'Twilio Account SID undefined.',
     TWILIO_PHONE_UNDEFINED: 'Twilio phone undefined.',
+    RESEND_API_UNDEFINED: 'Resend API undefined.'
 };

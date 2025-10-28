@@ -31,9 +31,9 @@ let LoginUserUseCase = class LoginUserUseCase {
      * @param {IUserRepository} userRepository - Repository for user data retrieval.
      * @param {JwtService} jwtService - Service for JWT token generation.
      */
-    constructor(userRepository, jwtService) {
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
+    constructor(_userRepository, _jwtService) {
+        this._userRepository = _userRepository;
+        this._jwtService = _jwtService;
     }
     /**
      * Executes the login process.
@@ -44,7 +44,7 @@ let LoginUserUseCase = class LoginUserUseCase {
      * @throws {CustomError} If user is not found, blocked, or password mismatch occurs.
      */
     async execute(dto) {
-        const user = await this.userRepository.findByEmail(dto.email);
+        const user = await this._userRepository.findByEmail(dto.email);
         if (!user || !user._id) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.USER_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
         }
@@ -52,8 +52,8 @@ let LoginUserUseCase = class LoginUserUseCase {
         if (!isMatch) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.PASSWORD_MISMATCH, httpResponseCode_utils_1.HttpResCode.UNAUTHORIZED);
         }
-        const accessToken = this.jwtService.generateAccessToken(user._id?.toString());
-        const refreshToken = this.jwtService.generateRefreshToken(user._id?.toString());
+        const accessToken = this._jwtService.generateAccessToken(user._id?.toString());
+        const refreshToken = this._jwtService.generateRefreshToken(user._id?.toString());
         return new auth_dto_1.AuthResponseDTO(accessToken, refreshToken, {
             id: user._id?.toString(),
             email: user.email,

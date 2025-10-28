@@ -35,10 +35,10 @@ let VerifyOtpUseCase = class VerifyOtpUseCase {
      * @param {JwtService} jwtService - Service for JWT handling.
      * @param {RedisService} redisService - Service for storing and retrieving OTPs.
      */
-    constructor(userReposiotry, jwtService, redisService) {
-        this.userReposiotry = userReposiotry;
-        this.jwtService = jwtService;
-        this.redisService = redisService;
+    constructor(_userRepository, _jwtService, _redisService) {
+        this._userRepository = _userRepository;
+        this._jwtService = _jwtService;
+        this._redisService = _redisService;
     }
     /**
      * Executes the OTP verification process.
@@ -50,22 +50,22 @@ let VerifyOtpUseCase = class VerifyOtpUseCase {
      */
     async execute(dto) {
         console.log(dto);
-        const storedOtp = await this.redisService.get(`otp:${dto.email}`);
+        const storedOtp = await this._redisService.get(`otp:${dto.email}`);
         console.log('storedOtp:', storedOtp);
         if (!storedOtp || storedOtp != dto.otp) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.INVALID_OTP, httpResponseCode_utils_1.HttpResCode.BAD_REQUEST);
         }
-        await this.redisService.del(`otp:${dto.email}`);
+        await this._redisService.del(`otp:${dto.email}`);
         const hashedPassword = await (0, passwordHash_util_1.hashPassword)(dto.password);
         let user = new user_entity_1.User(null, dto.name, dto.email, dto.phoneNumber, hashedPassword, new Date(), new Date());
-        await this.userReposiotry.create(user);
-        const createdUser = await this.userReposiotry.findByEmail(user.email.toLocaleLowerCase());
+        await this._userRepository.create(user);
+        const createdUser = await this._userRepository.findByEmail(user.email.toLocaleLowerCase());
         console.log('newcreatedUser:', createdUser);
         if (!createdUser || !createdUser._id) {
             throw new custom_error_1.CustomError(commonErrorMsg_constants_1.ErrorMsg.USER_NOT_FOUND, httpResponseCode_utils_1.HttpResCode.INTERNAL_SERVER_ERROR);
         }
-        const accessToken = this.jwtService.generateAccessToken(createdUser._id?.toString());
-        const refreshToken = this.jwtService.generateRefreshToken(createdUser._id?.toString());
+        const accessToken = this._jwtService.generateAccessToken(createdUser._id?.toString());
+        const refreshToken = this._jwtService.generateRefreshToken(createdUser._id?.toString());
         return new auth_dto_1.AuthResponseDTO(accessToken, refreshToken, {
             id: createdUser._id?.toString(),
             email: createdUser.email,

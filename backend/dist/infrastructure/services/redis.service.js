@@ -12,15 +12,15 @@ const commonErrorMsg_constants_1 = require("../../utils/constants/commonErrorMsg
 class RedisService {
     /**
      * Initializes the Redis client and connects to the Redis server.
-     * Handles connection events and logs errors if any occur.
+     * Handles connection events and logs errors if  occures.
      */
     constructor() {
-        this.client = (0, redis_1.createClient)({
+        this._client = (0, redis_1.createClient)({
             url: env_config_1.env.REDIS_URL, // Uses the cloud Redis URL
         });
-        this.client.on('error', (err) => console.error(commonErrorMsg_constants_1.ErrorMsg.REDIS_CONNECTION_ERROR, err));
-        this.client.on('connect', () => console.log(commonSuccessMsg_constants_1.SuccessMsg.REDIS_CONNECTED));
-        this.client
+        this._client.on('error', (err) => console.error(commonErrorMsg_constants_1.ErrorMsg.REDIS_CONNECTION_ERROR, err));
+        this._client.on('connect', () => console.log(commonSuccessMsg_constants_1.SuccessMsg.REDIS_CONNECTED));
+        this._client
             .connect()
             .catch((err) => console.error(commonErrorMsg_constants_1.ErrorMsg.REDIS_CONNECTION_ERROR, err));
     }
@@ -34,7 +34,7 @@ class RedisService {
      */
     async set(key, value, expirySeconds) {
         try {
-            await this.client.setEx(key, expirySeconds, value);
+            await this._client.setEx(key, expirySeconds, value);
         }
         catch (error) {
             throw new Error('Redis set failed');
@@ -48,7 +48,7 @@ class RedisService {
      */
     async get(key) {
         try {
-            return await this.client.get(key);
+            return await this._client.get(key);
         }
         catch (error) {
             throw new Error('Redis get failed');
@@ -62,7 +62,7 @@ class RedisService {
      */
     async del(key) {
         try {
-            await this.client.del(key);
+            await this._client.del(key);
         }
         catch (error) {
             throw new Error('Redis delete failed');

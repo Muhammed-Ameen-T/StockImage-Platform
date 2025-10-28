@@ -8,7 +8,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const env_config_1 = require("../../config/env.config");
 class NodemailerService {
     constructor() {
-        this.transporter = nodemailer_1.default.createTransport({
+        this._transporter = nodemailer_1.default.createTransport({
             host: env_config_1.env.SMTP_HOST,
             port: env_config_1.env.SMTP_PORT,
             secure: env_config_1.env.SMTP_SECURE,
@@ -32,7 +32,7 @@ class NodemailerService {
      */
     async sendEmail(recipient, subject, htmlContent) {
         try {
-            await this.transporter.sendMail({
+            await this._transporter.sendMail({
                 from: env_config_1.env.SMTP_USERNAME,
                 to: recipient,
                 subject,

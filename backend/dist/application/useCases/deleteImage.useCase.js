@@ -19,15 +19,15 @@ const types_1 = require("../../core/types");
  * Use case for deleting a user's image.
  */
 let DeleteImageUseCase = class DeleteImageUseCase {
-    constructor(imageRepository) {
-        this.imageRepository = imageRepository;
+    constructor(_imageRepository) {
+        this._imageRepository = _imageRepository;
     }
     /**
      * Deletes an image by its ID.
      * @param imageId - ID of the image to delete
      */
     async execute(imageId) {
-        await this.imageRepository.deleteById(imageId);
+        await this._imageRepository.deleteById(imageId);
     }
 };
 exports.DeleteImageUseCase = DeleteImageUseCase;
