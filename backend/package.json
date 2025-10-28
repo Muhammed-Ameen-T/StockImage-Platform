@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "dev": "nodemon --watch src --exec ts-node --files src/index.ts",
     "build": "tsc",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
