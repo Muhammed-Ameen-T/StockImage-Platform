@@ -6,7 +6,6 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --prefer-offline --no-audit
 
 # Stage 2: Production
-# Final lightweight image that runs your prebuilt app
 FROM node:22-alpine AS production
 WORKDIR /app
 
@@ -16,9 +15,8 @@ COPY --from=dependencies /app/node_modules ./node_modules
 # Copy prebuilt dist folder (already compiled locally)
 COPY dist ./dist
 
-# Copy environment file and package.json (optional but good practice)
+# Copy package.json (optional but good practice)
 COPY package.json ./
-COPY .env ./
 
 # Set environment variables
 ENV NODE_ENV=production
